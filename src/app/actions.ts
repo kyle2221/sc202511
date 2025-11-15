@@ -38,6 +38,8 @@ export async function generateCode(
   try {
     const selectedModel = validatedFields.data.model && validatedFields.data.model !== 'auto'
       ? validatedFields.data.model as ModelId
+      : validatedFields.data.model === 'fox-code-b1.2' 
+      ? 'googleai/gemini-2.5-flash' // Assuming this is how you map your custom model
       : undefined;
 
     const result = await generateCodeFromVibe({

@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
-import { Copy, Check, Wand2, Loader2 } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, User, Mail, Settings } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 const initialCss = `/* Your generated CSS will appear here. */
 
@@ -60,17 +63,17 @@ const initialTokens = `/* Your design tokens will appear here. */
   --card-foreground: 0 0% 98%;
   --popover: 0 0% 7.1%;
   --popover-foreground: 0 0% 98%;
-  --primary: 181 100% 74.3%;
+  --primary: 330 89% 67%;
   --primary-foreground: 0 0% 9%;
   --secondary: 0 0% 14.9%;
   --secondary-foreground: 0 0% 98%;
   --muted: 0 0% 14.9%;
   --muted-foreground: 0 0% 63.9%;
-  --accent: 202 100% 84.5%;
-  --accent-foreground: 0 0% 9%;
+  --accent: 330 80% 30%;
+  --accent-foreground: 0 0% 98%;
   --border: 0 0% 14.9%;
   --input: 0 0% 14.9%;
-  --ring: 181 100% 74.3%;
+  --ring: 330 89% 67%;
   --radius: 0.5rem;
 }
 `;
@@ -140,7 +143,7 @@ export function MainInterface() {
   `;
 
   return (
-    <main className="flex-1 grid lg:grid-cols-[380px_1fr] gap-6 p-6">
+    <main className="flex-1 grid lg:grid-cols-[380px_1fr] gap-6 p-6 overflow-hidden">
       <style>{combinedStyles}</style>
       
       {/* --- LEFT COLUMN: INPUT FORM --- */}
@@ -164,17 +167,58 @@ export function MainInterface() {
       {/* --- RIGHT COLUMN: PREVIEW & CODE --- */}
       <div className="flex flex-col gap-6 min-h-0">
         {/* --- PREVIEW PANEL --- */}
-        <div className="preview-scope rounded-xl border bg-card text-card-foreground p-6 flex flex-col gap-4 min-h-[300px] justify-center items-center">
-            <Card className="preview-card max-w-sm">
-                <CardHeader>
-                    <CardTitle className="font-headline">Thematic Card</CardTitle>
-                    <CardDescription>This is how a card component looks.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex gap-4">
-                    <button className="preview-button-primary">Primary</button>
-                    <button className="preview-button-secondary">Secondary</button>
-                </CardContent>
-            </Card>
+        <div className="preview-scope rounded-xl border bg-card text-card-foreground p-6 flex-1 flex flex-col gap-4 justify-center items-center overflow-auto">
+            <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
+                <h2 className="text-2xl font-headline text-center">Prototype</h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <Card className="preview-card">
+                        <CardHeader className="flex flex-row items-center gap-4">
+                            <Avatar>
+                                <AvatarImage src="https://picsum.photos/seed/1/100/100" />
+                                <AvatarFallback>JD</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <CardTitle className="font-headline text-xl">Jane Doe</CardTitle>
+                                <CardDescription>Product Designer</CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-4">
+                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                             <Mail className="w-4 h-4" />
+                             <span>jane.doe@example.com</span>
+                           </div>
+                           <div className="flex gap-2">
+                            <Badge variant="secondary">UI/UX</Badge>
+                            <Badge variant="secondary">Web Design</Badge>
+                            <Badge variant="secondary">Prototyping</Badge>
+                           </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="preview-card">
+                        <CardHeader>
+                            <CardTitle className="font-headline flex items-center gap-2">
+                                <Settings className="w-5 h-5" />
+                                <span>Settings</span>
+                            </CardTitle>
+                             <CardDescription>Manage your account settings.</CardDescription>
+                        </CardHeader>
+                         <CardContent className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-2">
+                               <Label htmlFor="username">Username</Label>
+                               <Input id="username" defaultValue="jane.doe" className="font-code" />
+                            </div>
+                             <div className="flex items-center justify-between">
+                                <Label htmlFor="dark-mode">Dark Mode</Label>
+                                <button className="preview-button-secondary !py-1 !px-2 text-sm">Toggle</button>
+                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                 <div className="flex gap-4 justify-center">
+                    <button className="preview-button-primary">Save Changes</button>
+                    <button className="preview-button-secondary">Cancel</button>
+                </div>
+            </div>
         </div>
 
         {/* --- CODE OUTPUT --- */}

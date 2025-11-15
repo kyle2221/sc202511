@@ -25,17 +25,17 @@ const initialCss = `/* Your generated CSS will appear here. */
 }
 
 .preview-button-primary {
-  background-color: hsl(var(--primary));
+  background: linear-gradient(145deg, hsl(var(--primary)), hsl(var(--accent)));
   color: hsl(var(--primary-foreground));
   padding: 0.5rem 1rem;
   border-radius: var(--radius);
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .preview-button-primary:hover {
-  background-color: hsl(var(--primary) / 0.9);
+  opacity: 0.9;
 }
 
 .preview-button-secondary {
@@ -49,31 +49,30 @@ const initialCss = `/* Your generated CSS will appear here. */
 }
 
 .preview-button-secondary:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  background-color: hsl(var(--secondary) / 0.8);
 }
 `;
 
 const initialTokens = `/* Your design tokens will appear here. */
 
 :root {
-  --background: 0 0% 7.1%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 10%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 7.1%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 330 89% 67%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 330 80% 30%;
-  --accent-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 330 89% 67%;
+  --background: 222 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222 84% 6.5%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 205 90% 61%;
+  --primary-foreground: 222 47% 11.2%;
+  --secondary: 217 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 195 90% 45%;
+  --accent-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 205 90% 61%;
   --radius: 0.5rem;
 }
 `;

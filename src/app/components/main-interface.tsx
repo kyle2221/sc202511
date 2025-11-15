@@ -1,7 +1,8 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { useEffect, useState, useRef, useActionState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useActionState } from 'react';
 import { Copy, Check, Wand2, Loader2, Code, Eye, Bot, Terminal, Download } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -206,7 +207,7 @@ export function MainInterface() {
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={65}>
         <Tabs defaultValue="preview" className="flex flex-col h-full">
-            <div className="flex items-center p-2 border-b">
+            <div className="flex items-center justify-between p-2 border-b">
                  <TabsList>
                     <TabsTrigger value="preview">
                         <Eye className="mr-2 h-4 w-4" />
@@ -216,6 +217,8 @@ export function MainInterface() {
                         <Code className="mr-2 h-4 w-4" />
                         Code
                     </TabsTrigger>
+                 </TabsList>
+                 <TabsList>
                     <TabsTrigger value="terminal">
                         <Terminal className="mr-2 h-4 w-4" />
                         Terminal

@@ -49,10 +49,19 @@ const initialTokens = `:root {
 }
 `;
 
+type TerminalLine = {
+  type: 'input' | 'output';
+  content: string;
+};
+
+const initialTerminalHistory: TerminalLine[] = [
+    { type: 'output', content: 'Terminal is ready. Try `generate retro cyberpunk` or `clear`.' },
+];
+
 const initialState: FormState = {
   tsxCode: '',
   designTokens: initialTokens,
-  terminalOutput: '> Terminal is ready. Describe a vibe and click "Generate" to start.',
+  terminalOutput: '',
   componentKey: 0,
 };
 
@@ -128,16 +137,51 @@ export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
   const { toast } = useToast();
   const terminalRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   
   const [DynamicVibeComponent, setDynamicVibeComponent] = useState(() => () => <PreviewLoading />);
   const [isPending, startTransition] = useTransition();
 
+  const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
+  const [terminalInput, setTerminalInput] = useState('');
+
+  const handleTerminalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const command = terminalInput.trim();
+    if (!command) return;
+
+    const newHistory: TerminalLine[] = [...terminalHistory, { type: 'input', content: command }];
+    setTerminalHistory(newHistory);
+    setTerminalInput('');
+
+    const [commandName, ...args] = command.split(' ');
+    const vibe = args.join(' ');
+
+    if (commandName === 'generate' && vibe) {
+        const formData = new FormData();
+        formData.append('vibe', vibe);
+        // You can also append the selected model if you have it in state
+        // formData.append('model', selectedModel);
+        formAction(formData);
+    } else if (commandName === 'clear') {
+        setTerminalHistory([]);
+    } else {
+        setTerminalHistory(prev => [...prev, { type: 'output', content: `Command not found: ${commandName}. Try 'generate <your vibe>' or 'clear'.` }]);
+    }
+  };
+
+
   useEffect(() => {
     if (state.error) {
       toast({ variant: 'destructive', title: 'Generation Failed', description: state.error });
+      setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: ${state.error}`}]);
     }
     if (state.success) {
       toast({ title: 'Success!', description: 'New component has been generated.' });
+      
+      if(state.terminalOutput) {
+         setTerminalHistory(prev => [...prev, {type: 'output', content: state.terminalOutput!}]);
+      }
       
       if (state.designTokens) {
            const styleElement = document.getElementById('preview-styles');
@@ -164,7 +208,7 @@ export function MainInterface() {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
-  }, [state.terminalOutput]);
+  }, [terminalHistory]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -183,7 +227,7 @@ export function MainInterface() {
         <ResizablePanelGroup direction="vertical">
           <ResizablePanel defaultSize={60} minSize={40}>
             <div className="flex flex-col h-full p-6 border-r">
-                <form action={formAction} className="flex flex-col gap-4 flex-1">
+                <form ref={formRef} action={formAction} className="flex flex-col gap-4 flex-1">
                   <Label htmlFor="vibe" className="text-base text-muted-foreground font-medium">Describe your vibe</Label>
                   <Textarea
                     id="vibe"
@@ -223,7 +267,22 @@ export function MainInterface() {
                 <h3 className="font-semibold text-sm">Terminal</h3>
               </div>
                <div ref={terminalRef} className="p-4 flex-1 bg-black text-white font-mono text-sm whitespace-pre-wrap overflow-y-auto">
-                  <p>{state.terminalOutput}</p>
+                  {terminalHistory.map((line, index) => (
+                    <div key={index} className="flex gap-2">
+                        {line.type === 'input' && <span className="text-green-400 flex-shrink-0">&gt;</span>}
+                        <p className={line.type === 'output' ? 'text-gray-300' : ''}>{line.content}</p>
+                    </div>
+                  ))}
+                   <form onSubmit={handleTerminalSubmit} className="flex gap-2">
+                        <span className="text-green-400">&gt;</span>
+                        <input
+                            type="text"
+                            value={terminalInput}
+                            onChange={(e) => setTerminalInput(e.target.value)}
+                            className="bg-transparent border-none focus:ring-0 flex-1 p-0 text-white font-mono text-sm"
+                            autoFocus
+                        />
+                   </form>
               </div>
             </div>
           </ResizablePanel>

@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 const VibeSchema = z.object({
-  vibe: z.string().min(10, { message: 'Please describe the vibe in at least 10 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
+  vibe: z.string().min(3, { message: 'Please describe the vibe in at least 3 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
   model: z.string().optional(),
 });
 

@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
-import { Copy, Check, Wand2, Loader2, User, Mail, Settings } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,73 +10,64 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { FileTree } from './file-tree';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const initialCss = `/* Your generated CSS will appear here. */
+
+.preview-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.preview-button:hover {
+  transform: scale(1.05);
+}
 
 .preview-card {
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
   border-radius: var(--radius);
   border: 1px solid hsl(var(--border));
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-.preview-button-primary {
-  background: linear-gradient(145deg, hsl(var(--primary)), hsl(var(--accent)));
-  color: hsl(var(--primary-foreground));
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.preview-button-primary:hover {
-  opacity: 0.9;
-}
-
-.preview-button-secondary {
-  background-color: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: 1px solid hsl(var(--border));
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.preview-button-secondary:hover {
-  background-color: hsl(var(--secondary) / 0.8);
+  padding: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 `;
 
 const initialTokens = `/* Your design tokens will appear here. */
 
 :root {
-  --background: 222 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222 84% 6.5%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
   --primary: 205 90% 61%;
   --primary-foreground: 222 47% 11.2%;
-  --secondary: 217 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
   --accent: 195 90% 45%;
-  --accent-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
+  --accent-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
   --ring: 205 90% 61%;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 `;
-
 
 const initialState: FormState = {
   cssSnippet: initialCss,
@@ -86,7 +77,7 @@ const initialState: FormState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full lg:w-auto">
+    <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
       Generate
     </Button>
@@ -122,6 +113,8 @@ export function MainInterface() {
 
   const [css, setCss] = useState(state.cssSnippet || '');
   const [tokens, setTokens] = useState(state.designTokens || '');
+  const [activeTab, setActiveTab] = useState('preview');
+
 
   useEffect(() => {
     if (state.error) {
@@ -131,127 +124,122 @@ export function MainInterface() {
       toast({ title: 'Success!', description: 'New styles have been generated.' });
       if (state.cssSnippet) setCss(state.cssSnippet);
       if (state.designTokens) setTokens(state.designTokens);
+
+      const styleElement = document.getElementById('preview-styles');
+      if (styleElement) {
+        styleElement.innerHTML = `
+          .preview-scope {
+            ${state.designTokens || ''}
+          }
+          ${state.cssSnippet || ''}
+        `;
+      }
     }
   }, [state, toast]);
 
-  const combinedStyles = `
-    .preview-scope {
-      ${tokens}
-    }
-    ${css}
-  `;
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
 
   return (
-    <main className="flex-1 grid lg:grid-cols-[380px_1fr] gap-6 p-6 overflow-hidden">
-      <style>{combinedStyles}</style>
+    <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <style id="preview-styles">{`
+        .preview-scope {
+          ${tokens}
+        }
+        ${css}
+      `}</style>
       
-      {/* --- LEFT COLUMN: INPUT FORM --- */}
-      <div className="flex flex-col gap-4">
-        <form action={formAction} ref={formRef} className="flex flex-col gap-4 flex-1">
-          <Label htmlFor="vibe" className="text-lg font-medium font-headline">Describe your vibe</Label>
-          <Textarea
-            id="vibe"
-            name="vibe"
-            placeholder="e.g., retro cyberpunk, minimalist workspace, vaporwave dream..."
-            className="flex-1 text-base font-code"
-            rows={8}
-            required
-          />
-          <div className="flex justify-end">
-            <SubmitButton />
-          </div>
-        </form>
-      </div>
-
-      {/* --- RIGHT COLUMN: PREVIEW & CODE --- */}
-      <div className="flex flex-col gap-6 min-h-0">
-        {/* --- PREVIEW PANEL --- */}
-        <div className="preview-scope rounded-xl border bg-card text-card-foreground p-6 flex-1 flex flex-col gap-4 justify-center items-center overflow-auto">
-            <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-                <h2 className="text-2xl font-headline text-center">Prototype</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <Card className="preview-card">
-                        <CardHeader className="flex flex-row items-center gap-4">
-                            <Avatar>
-                                <AvatarImage src="https://picsum.photos/seed/1/100/100" />
-                                <AvatarFallback>JD</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <CardTitle className="font-headline text-xl">Jane Doe</CardTitle>
-                                <CardDescription>Product Designer</CardDescription>
+      {/* --- LEFT PANEL: INPUT FORM --- */}
+      <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+        <div className="flex flex-col h-full p-6 border-r">
+            <form action={formAction} ref={formRef} className="flex flex-col gap-4 flex-1">
+              <Label htmlFor="vibe" className="text-lg font-medium font-headline">Describe your vibe</Label>
+              <Textarea
+                id="vibe"
+                name="vibe"
+                placeholder="e.g., retro cyberpunk, minimalist workspace, vaporwave dream..."
+                className="flex-1 text-base font-code bg-secondary border-0"
+                rows={8}
+                required
+              />
+              <SubmitButton />
+            </form>
+        </div>
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      {/* --- RIGHT PANEL: OUTPUT --- */}
+      <ResizablePanel defaultSize={75}>
+        <div className="flex flex-col h-full">
+            <div className="flex items-center p-2 border-b">
+                 <Button variant={activeTab === 'preview' ? 'secondary' : 'ghost'} size="sm" onClick={() => handleTabChange('preview')}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Prototype
+                </Button>
+                 <Button variant={activeTab === 'code' ? 'secondary' : 'ghost'} size="sm" onClick={() => handleTabChange('code')}>
+                    <Code className="mr-2 h-4 w-4" />
+                    Code
+                </Button>
+            </div>
+            <div className="flex-1 overflow-auto">
+                 {activeTab === 'preview' ? (
+                     <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
+                        <div className="flex flex-col gap-8 items-center">
+                            <h1 className="text-5xl font-bold font-headline">Your Awesome App</h1>
+                            <p className="text-lg text-muted-foreground">This is how your components could look.</p>
+                            <div className="flex gap-4">
+                                <button className="preview-button">Primary Action</button>
+                                <div className="preview-card">
+                                    <h3 className="text-xl font-bold mb-2">Card Title</h3>
+                                    <p>This is a sample card component.</p>
+                                </div>
                             </div>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-4">
-                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                             <Mail className="w-4 h-4" />
-                             <span>jane.doe@example.com</span>
-                           </div>
-                           <div className="flex gap-2">
-                            <Badge variant="secondary">UI/UX</Badge>
-                            <Badge variant="secondary">Web Design</Badge>
-                            <Badge variant="secondary">Prototyping</Badge>
-                           </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="preview-card">
-                        <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2">
-                                <Settings className="w-5 h-5" />
-                                <span>Settings</span>
-                            </CardTitle>
-                             <CardDescription>Manage your account settings.</CardDescription>
-                        </CardHeader>
-                         <CardContent className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
-                               <Label htmlFor="username">Username</Label>
-                               <Input id="username" defaultValue="jane.doe" className="font-code" />
-                            </div>
-                             <div className="flex items-center justify-between">
-                                <Label htmlFor="dark-mode">Dark Mode</Label>
-                                <button className="preview-button-secondary !py-1 !px-2 text-sm">Toggle</button>
-                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                 <div className="flex gap-4 justify-center">
-                    <button className="preview-button-primary">Save Changes</button>
-                    <button className="preview-button-secondary">Cancel</button>
-                </div>
+                        </div>
+                    </div>
+                ) : (
+                    <ResizablePanelGroup direction="horizontal" className="h-full">
+                        <ResizablePanel defaultSize={25} minSize={20}>
+                            <ScrollArea className="h-full p-4">
+                                <FileTree />
+                            </ScrollArea>
+                        </ResizablePanel>
+                         <ResizableHandle withHandle />
+                        <ResizablePanel defaultSize={75}>
+                            <Tabs defaultValue="css" className="flex flex-col h-full">
+                              <TabsList className="m-2">
+                                <TabsTrigger value="css">CSS</TabsTrigger>
+                                <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
+                              </TabsList>
+                              <TabsContent value="css" className="flex-1 flex flex-col m-2 mt-0 relative">
+                                <Textarea
+                                  value={css}
+                                  onChange={(e) => setCss(e.target.value)}
+                                  className="font-code text-sm h-full resize-none bg-secondary border-0"
+                                  aria-label="CSS Output"
+                                />
+                                <div className="absolute top-2 right-2">
+                                  <CopyButton textToCopy={css} />
+                                </div>
+                              </TabsContent>
+                              <TabsContent value="tokens" className="flex-1 flex flex-col m-2 mt-0 relative">
+                                <Textarea
+                                  value={tokens}
+                                  onChange={(e) => setTokens(e.target.value)}
+                                  className="font-code text-sm h-full resize-none bg-secondary border-0"
+                                  aria-label="Design Tokens Output"
+                                />
+                                 <div className="absolute top-2 right-2">
+                                  <CopyButton textToCopy={tokens} />
+                                </div>
+                              </TabsContent>
+                            </Tabs>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
+                )}
             </div>
         </div>
-
-        {/* --- CODE OUTPUT --- */}
-        <Tabs defaultValue="css" className="flex-1 flex flex-col min-h-0">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="css">CSS</TabsTrigger>
-              <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value="css" className="flex-1 flex flex-col mt-2 relative">
-            <Textarea
-              value={css}
-              onChange={(e) => setCss(e.target.value)}
-              className="font-code text-sm h-full resize-none"
-              aria-label="CSS Output"
-            />
-            <div className="absolute top-2 right-2">
-              <CopyButton textToCopy={css} />
-            </div>
-          </TabsContent>
-          <TabsContent value="tokens" className="flex-1 flex flex-col mt-2 relative">
-            <Textarea
-              value={tokens}
-              onChange={(e) => setTokens(e.target.value)}
-              className="font-code text-sm h-full resize-none"
-              aria-label="Design Tokens Output"
-            />
-             <div className="absolute top-2 right-2">
-              <CopyButton textToCopy={tokens} />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </main>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }

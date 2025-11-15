@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormStatus } from 'react-dom';
@@ -9,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -23,25 +24,23 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import * as LucideReact from 'lucide-react';
 
 const initialTsx = `
-import { Card } from "@/components/ui/card";
-
-export function VibeComponent() {
-  return (
-    <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
-      <Card className="p-8 text-center">
-        <h2 className="text-2xl font-semibold text-foreground mb-2">
-          Something amazing is cooking up...
-        </h2>
-        <p className="text-muted-foreground">
-          Describe a vibe in the panel to get started.
-        </p>
-      </Card>
-    </div>
-  )
-}
+<div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
+    <Card className="p-8 text-center">
+    <h2 className="text-2xl font-semibold text-foreground mb-2">
+        Something amazing is cooking up...
+    </h2>
+    <p className="text-muted-foreground">
+        Describe a vibe in the panel to get started.
+    </p>
+    </Card>
+</div>
 `;
 
 const initialTokens = `:root {
@@ -124,69 +123,35 @@ a.click();
 }
 
 function PreviewContent({ tsx }: { tsx: string }) {
-  const componentRegex = /export function (\w+)\(\) \{[\s\S]*?\}/;
-  const match = tsx.match(componentRegex);
-
-  if (match) {
-    const componentName = match[1];
-    const functionBody = `
-      "use client";
-      import React from 'react';
-      import { Button } from "@/components/ui/button";
-      import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-      import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-      import { Progress } from "@/components/ui/progress";
-      import { Badge } from "@/components/ui/badge";
-      import { Input } from "@/components/ui/input";
-      import { Label } from "@/components/ui/label";
-
-      const VibeComponent = React.memo(() => {
-        const tsxToComponent = (tsxCode) => {
-          try {
-            const fullCode = \`
-              const { \${Object.keys(LucideReact).join(', ')} } = LucideReact;
-              \${tsxCode}
-              return <\${componentName} />;
-            \`;
-            const transformedCode = new Function('React', 'LucideReact', 'Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Avatar', 'AvatarImage', 'AvatarFallback', 'Progress', 'Badge', 'Input', 'Label', fullCode);
-            return transformedCode(React, LucideReact, Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Avatar, AvatarImage, AvatarFallback, Progress, Badge, Input, Label);
-          } catch(e) {
-            console.error("Error rendering component:", e);
-            return <div className="text-red-500 p-4">Error rendering component. Check console for details.</div>
-          }
-        };
-        const Component = tsxToComponent(tsx);
-        return <>{Component}</>;
-      });
-      VibeComponent.displayName = 'VibeComponent';
-      return <VibeComponent />;
-    `;
-
+    const componentRegex = /export function (\w+)\(\) \{[\s\S]*?\}/;
+    const match = tsx.match(componentRegex);
+    const componentName = match ? match[1] : 'VibeComponent';
+  
     try {
-      const { VibeComponent } = new Function(
-        'React', 'LucideReact', 'Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Avatar', 'AvatarImage', 'AvatarFallback', 'Progress', 'Badge', 'Input', 'Label',
-        functionBody
-      )(React, LucideReact, Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Avatar, AvatarImage, AvatarFallback, Progress, Badge, Input, Label);
-      return <VibeComponent />;
-    } catch (e) {
-      console.error("Error creating function:", e);
-      return <div className="text-red-500 p-4">Error creating function. Check console for details.</div>
-    }
-  }
+        const fullCode = `
+            "use client";
+            const { ${Object.keys(LucideReact).join(', ')} } = LucideReact;
+            ${tsx.replace(/export function \w+\(\)/, 'function VibeComponent()')}
+            return React.createElement(VibeComponent);
+        `;
 
-  return (
-      <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
-            Something amazing is cooking up...
-          </h2>
-          <p className="text-muted-foreground">
-            Describe a vibe in the panel to get started.
-          </p>
-        </Card>
-      </div>
-  )
+        const renderComponent = new Function(
+            'React', 'LucideReact', 'Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Avatar', 'AvatarImage', 'AvatarFallback', 'Progress', 'Badge', 'Input', 'Label',
+            fullCode
+        );
+
+        return renderComponent(React, LucideReact, Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Avatar, AvatarImage, AvatarFallback, Progress, Badge, Input, Label);
+    } catch (e) {
+        console.error("Error rendering component:", e);
+        if (tsx === initialTsx) {
+             return (
+                <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground" dangerouslySetInnerHTML={{ __html: tsx }} />
+            )
+        }
+        return <div className="text-red-500 p-4">Error rendering component. Check console for details.</div>
+    }
 }
+
 
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
@@ -285,13 +250,13 @@ export function MainInterface() {
                         Code
                     </TabsTrigger>
                  </TabsList>
+                 <TabsList>
+                     <TabsTrigger value="terminal">
+                        <Terminal className="mr-2 h-4 w-4" />
+                        Terminal
+                    </TabsTrigger>
+                 </TabsList>
             </div>
-             <TabsList>
-                 <TabsTrigger value="terminal">
-                    <Terminal className="mr-2 h-4 w-4" />
-                    Terminal
-                </TabsTrigger>
-             </TabsList>
             <div className="flex-1 overflow-auto">
                  <TabsContent value="preview" className="mt-0 h-full">
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">

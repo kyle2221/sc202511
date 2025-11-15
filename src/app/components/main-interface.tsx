@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef, useActionState } from 'react';
-import { Copy, Check, Wand2, Loader2, Code, Eye, Bot } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye, Bot, Terminal, Download } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -110,6 +110,26 @@ function CopyButton({ textToCopy }: { textToCopy: string }) {
   );
 }
 
+function DownloadButton({ textToDownload, filename }: { textToDownload: string, filename: string }) {
+  const onDownload = () => {
+    const blob = new Blob([textToDownload], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Button variant="ghost" size="icon" onClick={onDownload} aria-label="Download code">
+      <Download className="h-4 w-4" />
+    </Button>
+  );
+}
+
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
   const { toast } = useToast();
@@ -129,8 +149,6 @@ export function MainInterface() {
 
       const styleElement = document.getElementById('preview-styles');
       if (styleElement) {
-        // A temporary fix to extract the root variables from the tokens
-        // and apply them to the preview scope.
         const rootVariables = state.designTokens?.match(/:root\s*{([^}]+)}/)?.[1] || '';
         styleElement.innerHTML = `
           .preview-scope {
@@ -151,7 +169,6 @@ export function MainInterface() {
         ${css}
       `}</style>
       
-      {/* --- CENTER PANEL: INPUT FORM --- */}
       <ResizablePanel defaultSize={35} minSize={25} maxSize={45}>
         <div className="flex flex-col h-full p-6 border-r bg-secondary/30">
             <form action={formAction} ref={formRef} className="flex flex-col gap-4 flex-1">
@@ -187,7 +204,6 @@ export function MainInterface() {
         </div>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      {/* --- RIGHT PANEL: OUTPUT --- */}
       <ResizablePanel defaultSize={65}>
         <Tabs defaultValue="preview" className="flex flex-col h-full">
             <div className="flex items-center p-2 border-b">
@@ -199,6 +215,10 @@ export function MainInterface() {
                     <TabsTrigger value="code">
                         <Code className="mr-2 h-4 w-4" />
                         Code
+                    </TabsTrigger>
+                    <TabsTrigger value="terminal">
+                        <Terminal className="mr-2 h-4 w-4" />
+                        Terminal
                     </TabsTrigger>
                  </TabsList>
             </div>
@@ -220,10 +240,12 @@ export function MainInterface() {
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 bg-secondary/30">
                   <Tabs defaultValue="css" className="flex flex-col h-full bg-transparent p-2">
-                    <TabsList>
-                      <TabsTrigger value="css">CSS</TabsTrigger>
-                      <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
-                    </TabsList>
+                    <div className="flex items-center justify-between">
+                      <TabsList>
+                        <TabsTrigger value="css">CSS</TabsTrigger>
+                        <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
+                      </TabsList>
+                    </div>
                     <TabsContent value="css" className="flex-1 flex flex-col mt-2 relative">
                       <Textarea
                         value={css}
@@ -231,8 +253,9 @@ export function MainInterface() {
                         className="font-code text-sm h-full resize-none bg-background/50 border-input"
                         aria-label="CSS Output"
                       />
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute top-2 right-2 flex items-center gap-1">
                         <CopyButton textToCopy={css} />
+                        <DownloadButton textToDownload={css} filename="styles.css" />
                       </div>
                     </TabsContent>
                     <TabsContent value="tokens" className="flex-1 flex flex-col mt-2 relative">
@@ -242,11 +265,18 @@ export function MainInterface() {
                         className="font-code text-sm h-full resize-none bg-background/50 border-input"
                         aria-label="Design Tokens Output"
                       />
-                        <div className="absolute top-2 right-2">
-                        <CopyButton textToCopy={tokens} />
-                      </div>
+                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                          <CopyButton textToCopy={tokens} />
+                          <DownloadButton textToDownload={tokens} filename="tokens.css" />
+                        </div>
                     </TabsContent>
                   </Tabs>
+                </TabsContent>
+                 <TabsContent value="terminal" className="mt-0">
+                     <div className="p-4 h-full bg-black text-green-400 font-mono text-sm">
+                        <p>&gt; Starting terminal...</p>
+                        <p>&gt; Terminal is ready.</p>
+                    </div>
                 </TabsContent>
             </div>
         </Tabs>

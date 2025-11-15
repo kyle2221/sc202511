@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
-import { Copy, Check, Wand2, Loader2, Code, Eye } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye, Bot } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -164,6 +171,24 @@ export function MainInterface() {
                 rows={8}
                 required
               />
+               <div className="flex flex-col gap-2">
+                <Label htmlFor="model" className="text-sm text-muted-foreground">Select AI Model</Label>
+                 <Select name="model" defaultValue="auto">
+                  <SelectTrigger className="w-full bg-background/50 border-input">
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">
+                      <div className="flex items-center gap-2">
+                        <Bot className="h-4 w-4" />
+                        <span>Auto</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                    <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <SubmitButton />
             </form>
         </div>

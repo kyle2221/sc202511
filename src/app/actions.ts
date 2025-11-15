@@ -2,9 +2,11 @@
 
 import { generateCodeFromVibe } from '@/ai/flows/generate-code-from-vibe';
 import { z } from 'zod';
+import { ModelId } from 'genkit/ai';
 
 const VibeSchema = z.object({
   vibe: z.string().min(10, { message: 'Please describe the vibe in at least 10 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
+  model: z.string().optional(),
 });
 
 export type FormState = {
@@ -20,6 +22,7 @@ export async function generateCode(
 ): Promise<FormState> {
   const validatedFields = VibeSchema.safeParse({
     vibe: formData.get('vibe'),
+    model: formData.get('model'),
   });
 
   if (!validatedFields.success) {
@@ -29,8 +32,13 @@ export async function generateCode(
   }
 
   try {
+    const selectedModel = validatedFields.data.model && validatedFields.data.model !== 'auto'
+      ? validatedFields.data.model as ModelId
+      : undefined;
+
     const result = await generateCodeFromVibe({
       vibeDescription: validatedFields.data.vibe,
+      model: selectedModel,
     });
     return {
       cssSnippet: result.cssSnippet,

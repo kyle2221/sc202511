@@ -9,6 +9,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { ModelId } from 'genkit/ai';
+
 
 const GenerateCodeFromVibeInputSchema = z.object({
   vibeDescription: z
@@ -16,6 +18,7 @@ const GenerateCodeFromVibeInputSchema = z.object({
     .describe(
       'A natural language description of the desired aesthetic vibe (e.g., \'retro cyberpunk\', \'minimalist workspace\').'
     ),
+  model: z.custom<ModelId>().optional().describe('The AI model to use for generation.'),
 });
 export type GenerateCodeFromVibeInput = z.infer<typeof GenerateCodeFromVibeInputSchema>;
 
@@ -33,7 +36,7 @@ export async function generateCodeFromVibe(
 
 const prompt = ai.definePrompt({
   name: 'generateCodeFromVibePrompt',
-  input: {schema: GenerateCodeFromVibeInputSchema},
+  input: {schema: z.object({ vibeDescription: GenerateCodeFromVibeInputSchema.shape.vibeDescription })},
   output: {schema: GenerateCodeFromVibeOutputSchema},
   prompt: `You are an expert CSS and design token generator. Given a vibe description, you will generate a CSS snippet and corresponding design tokens that reflect the vibe.
 
@@ -53,7 +56,10 @@ const generateCodeFromVibeFlow = ai.defineFlow(
     outputSchema: GenerateCodeFromVibeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt(
+        { vibeDescription: input.vibeDescription },
+        { model: input.model }
+    );
     return output!;
   }
 );

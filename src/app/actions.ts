@@ -10,8 +10,9 @@ const VibeSchema = z.object({
 });
 
 export type FormState = {
-  cssSnippet?: string;
+  tsxCode?: string;
   designTokens?: string;
+  terminalOutput?: string;
   error?: string;
   success?: boolean;
 };
@@ -36,19 +37,27 @@ export async function generateCode(
       ? validatedFields.data.model as ModelId
       : undefined;
 
+    // We can't stream the response to the client action directly yet,
+    // so we'll await the full response here.
     const result = await generateCodeFromVibe({
       vibeDescription: validatedFields.data.vibe,
       model: selectedModel,
     });
+
+    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating code...\n\n${result.tsxCode}`;
+
     return {
-      cssSnippet: result.cssSnippet,
+      tsxCode: result.tsxCode,
       designTokens: result.designTokens,
+      terminalOutput: terminalOutput,
       success: true,
     };
   } catch (e) {
     console.error(e);
+    const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
     return {
-      error: 'An unexpected error occurred. The vibe might be too unusual. Please try again.',
+      error: `An unexpected error occurred. The vibe might be too unusual. Please try again. Details: ${errorMessage}`,
+      terminalOutput: `> Generation failed!\n> ${errorMessage}`
     };
   }
 }

@@ -24,32 +24,38 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-const initialCss = `/* Your generated CSS will appear here. */
+const initialTsx = `/* 
+  Your generated TSX component will appear here. 
+  The AI will create a component that uses ShadCN UI and Tailwind CSS.
+*/
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-.preview-button {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.preview-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-.preview-card {
-  background-color: hsl(var(--card));
-  color: hsl(var(--card-foreground));
-  border-radius: var(--radius);
-  border: 1px solid hsl(var(--border));
-  padding: 1.5rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+export function VibeComponent() {
+  return (
+    <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
+      <div className="text-center mb-8">
+        <h1 className="text-5xl font-bold font-headline mb-2">
+          Your Awesome App
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          This is how your components could look.
+        </p>
+      </div>
+      <div className="flex gap-6 justify-center items-center">
+        <Button size="lg">Primary Action</Button>
+        <Card className="w-80">
+          <CardHeader>
+            <CardTitle>Card Title</CardTitle>
+            <CardDescription>This is a sample card component.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>The AI will generate content here.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }
 `;
 
@@ -76,8 +82,9 @@ const initialTokens = `:root {
 `;
 
 const initialState: FormState = {
-  cssSnippet: initialCss,
+  tsxCode: initialTsx,
   designTokens: initialTokens,
+  terminalOutput: '> Terminal is ready.',
 };
 
 function SubmitButton() {
@@ -113,7 +120,7 @@ function CopyButton({ textToCopy }: { textToCopy: string }) {
 
 function DownloadButton({ textToDownload, filename }: { textToDownload: string, filename: string }) {
   const onDownload = () => {
-    const blob = new Blob([textToDownload], { type: 'text/css' });
+    const blob = new Blob([textToDownload], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -135,31 +142,40 @@ export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
 
-  const [css, setCss] = useState(state.cssSnippet || '');
+  const [tsx, setTsx] = useState(state.tsxCode || '');
   const [tokens, setTokens] = useState(state.designTokens || '');
+  const [terminalOutput, setTerminalOutput] = useState(state.terminalOutput || '');
 
   useEffect(() => {
     if (state.error) {
       toast({ variant: 'destructive', title: 'Generation Failed', description: state.error });
     }
     if (state.success) {
-      toast({ title: 'Success!', description: 'New styles have been generated.' });
-      if (state.cssSnippet) setCss(state.cssSnippet);
-      if (state.designTokens) setTokens(state.designTokens);
-
-      const styleElement = document.getElementById('preview-styles');
-      if (styleElement) {
-        const rootVariables = state.designTokens?.match(/:root\s*{([^}]+)}/)?.[1] || '';
-        styleElement.innerHTML = `
-          .preview-scope {
-            ${rootVariables}
-          }
-          ${state.cssSnippet || ''}
-        `;
+      toast({ title: 'Success!', description: 'New component has been generated.' });
+      if (state.tsxCode) setTsx(state.tsxCode);
+      if (state.designTokens) {
+          setTokens(state.designTokens);
+           const styleElement = document.getElementById('preview-styles');
+            if (styleElement) {
+                const rootVariables = state.designTokens?.match(/:root\s*{([^}]+)}/)?.[1] || '';
+                styleElement.innerHTML = `
+                .preview-scope {
+                    ${rootVariables}
+                }
+                `;
+            }
       }
+      if (state.terminalOutput) setTerminalOutput(state.terminalOutput);
     }
   }, [state, toast]);
+
+   useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [terminalOutput]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -167,7 +183,6 @@ export function MainInterface() {
         .preview-scope {
           ${tokens.match(/:root\s*{([^}]+)}/)?.[1] || ''}
         }
-        ${css}
       `}</style>
       
       <ResizablePanel defaultSize={35} minSize={25} maxSize={45}>
@@ -217,8 +232,6 @@ export function MainInterface() {
                         <Code className="mr-2 h-4 w-4" />
                         Code
                     </TabsTrigger>
-                 </TabsList>
-                 <TabsList>
                     <TabsTrigger value="terminal">
                         <Terminal className="mr-2 h-4 w-4" />
                         Terminal
@@ -232,33 +245,37 @@ export function MainInterface() {
                             <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-primary via-primary to-accent">Your Awesome App</h1>
                             <p className="text-lg text-muted-foreground mt-2 mb-8">This is how your components could look.</p>
                             <div className="flex gap-6 justify-center items-center">
-                                <button className="preview-button">Primary Action</button>
-                                <div className="preview-card text-left">
-                                    <h3 className="text-xl font-bold mb-2">Card Title</h3>
-                                    <p className="text-muted-foreground">This is a sample card component.</p>
-                                </div>
+                                <Button>Primary Action</Button>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Card Title</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">This is a sample card component.</p>
+                                    </CardContent>
+                                </Card>
                             </div>
                         </div>
                     </div>
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 bg-secondary/30">
-                  <Tabs defaultValue="css" className="flex flex-col h-full bg-transparent p-2">
+                  <Tabs defaultValue="tsx" className="flex flex-col h-full bg-transparent p-2">
                     <div className="flex items-center justify-between">
                       <TabsList>
-                        <TabsTrigger value="css">CSS</TabsTrigger>
-                        <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
+                        <TabsTrigger value="tsx">Component.tsx</TabsTrigger>
+                        <TabsTrigger value="tokens">tokens.css</TabsTrigger>
                       </TabsList>
                     </div>
-                    <TabsContent value="css" className="flex-1 flex flex-col mt-2 relative">
+                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-2 relative">
                       <Textarea
-                        value={css}
+                        value={tsx}
                         readOnly
                         className="font-code text-sm h-full resize-none bg-background/50 border-input"
-                        aria-label="CSS Output"
+                        aria-label="TSX Output"
                       />
                       <div className="absolute top-2 right-2 flex items-center gap-1">
-                        <CopyButton textToCopy={css} />
-                        <DownloadButton textToDownload={css} filename="styles.css" />
+                        <CopyButton textToCopy={tsx} />
+                        <DownloadButton textToDownload={tsx} filename="VibeComponent.tsx" />
                       </div>
                     </TabsContent>
                     <TabsContent value="tokens" className="flex-1 flex flex-col mt-2 relative">
@@ -275,10 +292,9 @@ export function MainInterface() {
                     </TabsContent>
                   </Tabs>
                 </TabsContent>
-                 <TabsContent value="terminal" className="mt-0">
-                     <div className="p-4 h-full bg-black text-green-400 font-mono text-sm">
-                        <p>&gt; Starting terminal...</p>
-                        <p>&gt; Terminal is ready.</p>
+                 <TabsContent value="terminal" className="mt-0 h-full">
+                     <div ref={terminalRef} className="p-4 h-full bg-black text-white font-mono text-sm whitespace-pre-wrap overflow-y-auto">
+                        <p>{terminalOutput}</p>
                     </div>
                 </TabsContent>
             </div>

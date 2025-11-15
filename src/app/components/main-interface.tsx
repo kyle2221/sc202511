@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -20,18 +19,20 @@ import {
 const initialCss = `/* Your generated CSS will appear here. */
 
 .preview-button {
-  background-color: hsl(var(--primary));
+  background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius);
   border: none;
   cursor: pointer;
   font-weight: 600;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .preview-button:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
 .preview-card {
@@ -44,17 +45,15 @@ const initialCss = `/* Your generated CSS will appear here. */
 }
 `;
 
-const initialTokens = `/* Your design tokens will appear here. */
-
-:root {
+const initialTokens = `:root {
   --background: 0 0% 3.9%;
   --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
+  --card: 0 0% 5.9%;
   --card-foreground: 0 0% 98%;
   --popover: 0 0% 3.9%;
   --popover-foreground: 0 0% 98%;
   --primary: 205 90% 61%;
-  --primary-foreground: 222 47% 11.2%;
+  --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 14.9%;
   --secondary-foreground: 0 0% 98%;
   --muted: 0 0% 14.9%;
@@ -76,8 +75,8 @@ const initialState: FormState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+    <Button type="submit" disabled={pending} className="w-full text-base py-6 font-bold tracking-wide">
+      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5" />}
       Generate
     </Button>
   );
@@ -92,7 +91,6 @@ function CopyButton({ textToCopy }: { textToCopy: string }) {
       setCopied(true);
       toast({
         title: "Copied to clipboard!",
-        description: "You can now paste the code in your project.",
       });
       setTimeout(() => setCopied(false), 2000);
     });
@@ -126,9 +124,12 @@ export function MainInterface() {
 
       const styleElement = document.getElementById('preview-styles');
       if (styleElement) {
+        // A temporary fix to extract the root variables from the tokens
+        // and apply them to the preview scope.
+        const rootVariables = state.designTokens?.match(/:root\s*{([^}]+)}/)?.[1] || '';
         styleElement.innerHTML = `
           .preview-scope {
-            ${state.designTokens || ''}
+            ${rootVariables}
           }
           ${state.cssSnippet || ''}
         `;
@@ -145,21 +146,21 @@ export function MainInterface() {
     <ResizablePanelGroup direction="horizontal" className="flex-1">
       <style id="preview-styles">{`
         .preview-scope {
-          ${tokens}
+          ${tokens.match(/:root\s*{([^}]+)}/)?.[1] || ''}
         }
         ${css}
       `}</style>
       
       {/* --- CENTER PANEL: INPUT FORM --- */}
       <ResizablePanel defaultSize={35} minSize={25} maxSize={45}>
-        <div className="flex flex-col h-full p-6 border-r">
+        <div className="flex flex-col h-full p-6 border-r bg-secondary/30">
             <form action={formAction} ref={formRef} className="flex flex-col gap-4 flex-1">
-              <Label htmlFor="vibe" className="text-lg font-medium font-headline">Describe your vibe</Label>
+              <Label htmlFor="vibe" className="text-base text-muted-foreground font-medium">Describe your vibe</Label>
               <Textarea
                 id="vibe"
                 name="vibe"
                 placeholder="e.g., retro cyberpunk, minimalist workspace, vaporwave dream..."
-                className="flex-1 text-base font-code bg-secondary border-0"
+                className="flex-1 text-base font-code bg-background/50 border-input focus:border-primary/50 text-foreground/90 p-4"
                 rows={8}
                 required
               />
@@ -184,20 +185,20 @@ export function MainInterface() {
             <div className="flex-1 overflow-auto">
                  {activeTab === 'preview' ? (
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
-                        <div className="flex flex-col gap-8 items-center">
-                            <h1 className="text-5xl font-bold font-headline">Your Awesome App</h1>
-                            <p className="text-lg text-muted-foreground">This is how your components could look.</p>
-                            <div className="flex gap-4">
+                        <div className="text-center">
+                            <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-foreground to-muted-foreground">Your Awesome App</h1>
+                            <p className="text-lg text-muted-foreground mt-2 mb-8">This is how your components could look.</p>
+                            <div className="flex gap-6 justify-center items-center">
                                 <button className="preview-button">Primary Action</button>
-                                <div className="preview-card">
+                                <div className="preview-card text-left">
                                     <h3 className="text-xl font-bold mb-2">Card Title</h3>
-                                    <p>This is a sample card component.</p>
+                                    <p className="text-muted-foreground">This is a sample card component.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 ) : (
-                  <Tabs defaultValue="css" className="flex flex-col h-full">
+                  <Tabs defaultValue="css" className="flex flex-col h-full bg-secondary/30">
                     <TabsList className="m-2">
                       <TabsTrigger value="css">CSS</TabsTrigger>
                       <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
@@ -205,8 +206,8 @@ export function MainInterface() {
                     <TabsContent value="css" className="flex-1 flex flex-col m-2 mt-0 relative">
                       <Textarea
                         value={css}
-                        onChange={(e) => setCss(e.target.value)}
-                        className="font-code text-sm h-full resize-none bg-secondary border-0"
+                        readOnly
+                        className="font-code text-sm h-full resize-none bg-background/50 border-input"
                         aria-label="CSS Output"
                       />
                       <div className="absolute top-2 right-2">
@@ -216,8 +217,8 @@ export function MainInterface() {
                     <TabsContent value="tokens" className="flex-1 flex flex-col m-2 mt-0 relative">
                       <Textarea
                         value={tokens}
-                        onChange={(e) => setTokens(e.target.value)}
-                        className="font-code text-sm h-full resize-none bg-secondary border-0"
+                        readOnly
+                        className="font-code text-sm h-full resize-none bg-background/50 border-input"
                         aria-label="Design Tokens Output"
                       />
                         <div className="absolute top-2 right-2">

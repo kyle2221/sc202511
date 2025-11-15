@@ -4,7 +4,7 @@ import { generateCodeFromVibe } from '@/ai/flows/generate-code-from-vibe';
 import { z } from 'zod';
 
 const VibeSchema = z.object({
-  vibe: z.string().min(10, { message: 'Please describe the vibe in at least 10 characters.' }).max(200, { message: 'Description must be 200 characters or less.' }),
+  vibe: z.string().min(10, { message: 'Please describe the vibe in at least 10 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
 });
 
 export type FormState = {

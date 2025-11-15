@@ -186,7 +186,7 @@ export function MainInterface() {
                  {activeTab === 'preview' ? (
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
                         <div className="text-center">
-                            <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-foreground to-muted-foreground">Your Awesome App</h1>
+                            <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-primary via-primary to-accent">Your Awesome App</h1>
                             <p className="text-lg text-muted-foreground mt-2 mb-8">This is how your components could look.</p>
                             <div className="flex gap-6 justify-center items-center">
                                 <button className="preview-button">Primary Action</button>

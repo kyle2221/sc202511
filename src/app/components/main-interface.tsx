@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTree } from './file-tree';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ResizableHandle,
@@ -151,8 +150,8 @@ export function MainInterface() {
         ${css}
       `}</style>
       
-      {/* --- LEFT PANEL: INPUT FORM --- */}
-      <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+      {/* --- CENTER PANEL: INPUT FORM --- */}
+      <ResizablePanel defaultSize={35} minSize={25} maxSize={45}>
         <div className="flex flex-col h-full p-6 border-r">
             <form action={formAction} ref={formRef} className="flex flex-col gap-4 flex-1">
               <Label htmlFor="vibe" className="text-lg font-medium font-headline">Describe your vibe</Label>
@@ -170,7 +169,7 @@ export function MainInterface() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       {/* --- RIGHT PANEL: OUTPUT --- */}
-      <ResizablePanel defaultSize={75}>
+      <ResizablePanel defaultSize={65}>
         <div className="flex flex-col h-full">
             <div className="flex items-center p-2 border-b">
                  <Button variant={activeTab === 'preview' ? 'secondary' : 'ghost'} size="sm" onClick={() => handleTabChange('preview')}>
@@ -198,44 +197,34 @@ export function MainInterface() {
                         </div>
                     </div>
                 ) : (
-                    <ResizablePanelGroup direction="horizontal" className="h-full">
-                        <ResizablePanel defaultSize={25} minSize={20}>
-                            <ScrollArea className="h-full p-4">
-                                <FileTree />
-                            </ScrollArea>
-                        </ResizablePanel>
-                         <ResizableHandle withHandle />
-                        <ResizablePanel defaultSize={75}>
-                            <Tabs defaultValue="css" className="flex flex-col h-full">
-                              <TabsList className="m-2">
-                                <TabsTrigger value="css">CSS</TabsTrigger>
-                                <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
-                              </TabsList>
-                              <TabsContent value="css" className="flex-1 flex flex-col m-2 mt-0 relative">
-                                <Textarea
-                                  value={css}
-                                  onChange={(e) => setCss(e.target.value)}
-                                  className="font-code text-sm h-full resize-none bg-secondary border-0"
-                                  aria-label="CSS Output"
-                                />
-                                <div className="absolute top-2 right-2">
-                                  <CopyButton textToCopy={css} />
-                                </div>
-                              </TabsContent>
-                              <TabsContent value="tokens" className="flex-1 flex flex-col m-2 mt-0 relative">
-                                <Textarea
-                                  value={tokens}
-                                  onChange={(e) => setTokens(e.target.value)}
-                                  className="font-code text-sm h-full resize-none bg-secondary border-0"
-                                  aria-label="Design Tokens Output"
-                                />
-                                 <div className="absolute top-2 right-2">
-                                  <CopyButton textToCopy={tokens} />
-                                </div>
-                              </TabsContent>
-                            </Tabs>
-                        </ResizablePanel>
-                    </ResizablePanelGroup>
+                  <Tabs defaultValue="css" className="flex flex-col h-full">
+                    <TabsList className="m-2">
+                      <TabsTrigger value="css">CSS</TabsTrigger>
+                      <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="css" className="flex-1 flex flex-col m-2 mt-0 relative">
+                      <Textarea
+                        value={css}
+                        onChange={(e) => setCss(e.target.value)}
+                        className="font-code text-sm h-full resize-none bg-secondary border-0"
+                        aria-label="CSS Output"
+                      />
+                      <div className="absolute top-2 right-2">
+                        <CopyButton textToCopy={css} />
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="tokens" className="flex-1 flex flex-col m-2 mt-0 relative">
+                      <Textarea
+                        value={tokens}
+                        onChange={(e) => setTokens(e.target.value)}
+                        className="font-code text-sm h-full resize-none bg-secondary border-0"
+                        aria-label="Design Tokens Output"
+                      />
+                        <div className="absolute top-2 right-2">
+                        <CopyButton textToCopy={tokens} />
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 )}
             </div>
         </div>

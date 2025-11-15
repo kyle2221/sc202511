@@ -1,7 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useState, useRef } from 'react';
+import { useFormStatus } from 'react-dom';
+import { useEffect, useState, useRef, useActionState } from 'react';
 import { Copy, Check, Wand2, Loader2, Code, Eye, Bot } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -111,7 +111,7 @@ function CopyButton({ textToCopy }: { textToCopy: string }) {
 }
 
 export function MainInterface() {
-  const [state, formAction] = useFormState(generateCode, initialState);
+  const [state, formAction] = useActionState(generateCode, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 

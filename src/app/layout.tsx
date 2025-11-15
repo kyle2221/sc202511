@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "Sourced Code",
+  title: "Swift Code",
   description: "Generate aesthetic code snippets and visual styles from text prompts.",
 };
 

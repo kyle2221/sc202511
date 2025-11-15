@@ -24,36 +24,20 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-const initialTsx = `/* 
-  Your generated TSX component will appear here. 
-  The AI will create a component that uses ShadCN UI and Tailwind CSS.
-*/
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+const initialTsx = `
+import { Card } from "@/components/ui/card";
 
 export function VibeComponent() {
   return (
     <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
-      <div className="text-center mb-8">
-        <h1 className="text-5xl font-bold font-headline mb-2">
-          Your Awesome App
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          This is how your components could look.
+      <Card className="p-8 text-center">
+        <h2 className="text-2xl font-semibold text-foreground mb-2">
+          Something amazing is cooking up...
+        </h2>
+        <p className="text-muted-foreground">
+          Describe a vibe in the panel to get started.
         </p>
-      </div>
-      <div className="flex gap-6 justify-center items-center">
-        <Button size="lg">Primary Action</Button>
-        <Card className="w-80">
-          <CardHeader>
-            <CardTitle>Card Title</CardTitle>
-            <CardDescription>This is a sample card component.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>The AI will generate content here.</p>
-          </CardContent>
-        </Card>
-      </div>
+      </Card>
     </div>
   )
 }
@@ -84,7 +68,7 @@ const initialTokens = `:root {
 const initialState: FormState = {
   tsxCode: initialTsx,
   designTokens: initialTokens,
-  terminalOutput: '> Terminal is ready.',
+  terminalOutput: '> Terminal is ready. Describe a vibe and click "Generate" to start.',
 };
 
 function SubmitButton() {
@@ -126,7 +110,7 @@ function DownloadButton({ textToDownload, filename }: { textToDownload: string, 
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
-    a.click();
+a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
@@ -136,6 +120,72 @@ function DownloadButton({ textToDownload, filename }: { textToDownload: string, 
       <Download className="h-4 w-4" />
     </Button>
   );
+}
+
+function PreviewContent({ tsx }: { tsx: string }) {
+  const componentRegex = /export function (\w+)\(\) \{[\s\S]*?\}/;
+  const match = tsx.match(componentRegex);
+
+  if (match) {
+    const componentName = match[1];
+    const functionBody = `
+      "use client";
+      import React from 'react';
+      import * as LucideReact from 'lucide-react';
+      import { Button } from "@/components/ui/button";
+      import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+      import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+      import { Progress } from "@/components/ui/progress";
+      import { Badge } from "@/components/ui/badge";
+      import { Input } from "@/components/ui/input";
+      import { Label } from "@/components/ui/label";
+
+      const VibeComponent = React.memo(() => {
+        const tsxToComponent = (tsxCode) => {
+          try {
+            const fullCode = \`
+              const { ${Object.keys(LucideReact).join(', ')} } = LucideReact;
+              \${tsxCode}
+              return <\${componentName} />;
+            \`;
+            const transformedCode = new Function('React', 'LucideReact', 'Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Avatar', 'AvatarImage', 'AvatarFallback', 'Progress', 'Badge', 'Input', 'Label', fullCode);
+            return transformedCode(React, LucideReact, Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Avatar, AvatarImage, AvatarFallback, Progress, Badge, Input, Label);
+          } catch(e) {
+            console.error("Error rendering component:", e);
+            return <div className="text-red-500 p-4">Error rendering component. Check console for details.</div>
+          }
+        };
+        const Component = tsxToComponent(tsx);
+        return <>{Component}</>;
+      });
+      VibeComponent.displayName = 'VibeComponent';
+      return <VibeComponent />;
+    `;
+
+    try {
+      const { VibeComponent } = new Function(
+        'React', 'LucideReact', 'Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Avatar', 'AvatarImage', 'AvatarFallback', 'Progress', 'Badge', 'Input', 'Label',
+        functionBody
+      )(React, LucideReact, Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Avatar, AvatarImage, AvatarFallback, Progress, Badge, Input, Label);
+      return <VibeComponent />;
+    } catch (e) {
+      console.error("Error creating function:", e);
+      return <div className="text-red-500 p-4">Error creating function. Check console for details.</div>
+    }
+  }
+
+  return (
+      <div className="p-8 h-full flex flex-col items-center justify-center bg-background text-foreground">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
+            Something amazing is cooking up...
+          </h2>
+          <p className="text-muted-foreground">
+            Describe a vibe in the panel to get started.
+          </p>
+        </Card>
+      </div>
+  )
 }
 
 export function MainInterface() {
@@ -167,7 +217,9 @@ export function MainInterface() {
                 `;
             }
       }
-      if (state.terminalOutput) setTerminalOutput(state.terminalOutput);
+    }
+    if(state.terminalOutput) {
+        setTerminalOutput(state.terminalOutput);
     }
   }, [state, toast]);
 
@@ -239,23 +291,9 @@ export function MainInterface() {
                  </TabsList>
             </div>
             <div className="flex-1 overflow-auto">
-                 <TabsContent value="preview" className="mt-0">
+                 <TabsContent value="preview" className="mt-0 h-full">
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
-                        <div className="text-center">
-                            <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-primary via-primary to-accent">Your Awesome App</h1>
-                            <p className="text-lg text-muted-foreground mt-2 mb-8">This is how your components could look.</p>
-                            <div className="flex gap-6 justify-center items-center">
-                                <Button>Primary Action</Button>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Card Title</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-muted-foreground">This is a sample card component.</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
+                       <PreviewContent tsx={tsx} />
                     </div>
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 bg-secondary/30">

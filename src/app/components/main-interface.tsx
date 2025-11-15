@@ -23,6 +23,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import * as LucideReact from 'lucide-react';
 
 const initialTsx = `
 import { Card } from "@/components/ui/card";
@@ -131,7 +132,6 @@ function PreviewContent({ tsx }: { tsx: string }) {
     const functionBody = `
       "use client";
       import React from 'react';
-      import * as LucideReact from 'lucide-react';
       import { Button } from "@/components/ui/button";
       import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
       import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -144,7 +144,7 @@ function PreviewContent({ tsx }: { tsx: string }) {
         const tsxToComponent = (tsxCode) => {
           try {
             const fullCode = \`
-              const { ${Object.keys(LucideReact).join(', ')} } = LucideReact;
+              const { \${Object.keys(LucideReact).join(', ')} } = LucideReact;
               \${tsxCode}
               return <\${componentName} />;
             \`;
@@ -284,12 +284,14 @@ export function MainInterface() {
                         <Code className="mr-2 h-4 w-4" />
                         Code
                     </TabsTrigger>
-                    <TabsTrigger value="terminal">
-                        <Terminal className="mr-2 h-4 w-4" />
-                        Terminal
-                    </TabsTrigger>
                  </TabsList>
             </div>
+             <TabsList>
+                 <TabsTrigger value="terminal">
+                    <Terminal className="mr-2 h-4 w-4" />
+                    Terminal
+                </TabsTrigger>
+             </TabsList>
             <div className="flex-1 overflow-auto">
                  <TabsContent value="preview" className="mt-0 h-full">
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">

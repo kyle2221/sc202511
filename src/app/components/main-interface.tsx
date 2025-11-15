@@ -117,8 +117,6 @@ export function MainInterface() {
 
   const [css, setCss] = useState(state.cssSnippet || '');
   const [tokens, setTokens] = useState(state.designTokens || '');
-  const [activeTab, setActiveTab] = useState('preview');
-
 
   useEffect(() => {
     if (state.error) {
@@ -143,11 +141,6 @@ export function MainInterface() {
       }
     }
   }, [state, toast]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-
 
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -196,19 +189,21 @@ export function MainInterface() {
       <ResizableHandle withHandle />
       {/* --- RIGHT PANEL: OUTPUT --- */}
       <ResizablePanel defaultSize={65}>
-        <div className="flex flex-col h-full">
+        <Tabs defaultValue="preview" className="flex flex-col h-full">
             <div className="flex items-center p-2 border-b">
-                 <Button variant={activeTab === 'preview' ? 'secondary' : 'ghost'} size="sm" onClick={() => handleTabChange('preview')}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Prototype
-                </Button>
-                 <Button variant={activeTab === 'code' ? 'secondary' : 'ghost'} size="sm" onClick={() => handleTabChange('code')}>
-                    <Code className="mr-2 h-4 w-4" />
-                    Code
-                </Button>
+                 <TabsList>
+                    <TabsTrigger value="preview">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Prototype
+                    </TabsTrigger>
+                    <TabsTrigger value="code">
+                        <Code className="mr-2 h-4 w-4" />
+                        Code
+                    </TabsTrigger>
+                 </TabsList>
             </div>
             <div className="flex-1 overflow-auto">
-                 {activeTab === 'preview' ? (
+                 <TabsContent value="preview" className="mt-0">
                      <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
                         <div className="text-center">
                             <h1 className="text-5xl font-bold font-headline bg-clip-text text-transparent bg-gradient-to-br from-primary via-primary to-accent">Your Awesome App</h1>
@@ -222,13 +217,14 @@ export function MainInterface() {
                             </div>
                         </div>
                     </div>
-                ) : (
-                  <Tabs defaultValue="css" className="flex flex-col h-full bg-secondary/30">
-                    <TabsList className="m-2">
+                </TabsContent>
+                <TabsContent value="code" className="flex flex-col h-full m-0 bg-secondary/30">
+                  <Tabs defaultValue="css" className="flex flex-col h-full bg-transparent p-2">
+                    <TabsList>
                       <TabsTrigger value="css">CSS</TabsTrigger>
                       <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="css" className="flex-1 flex flex-col m-2 mt-0 relative">
+                    <TabsContent value="css" className="flex-1 flex flex-col mt-2 relative">
                       <Textarea
                         value={css}
                         readOnly
@@ -239,7 +235,7 @@ export function MainInterface() {
                         <CopyButton textToCopy={css} />
                       </div>
                     </TabsContent>
-                    <TabsContent value="tokens" className="flex-1 flex flex-col m-2 mt-0 relative">
+                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-2 relative">
                       <Textarea
                         value={tokens}
                         readOnly
@@ -251,9 +247,9 @@ export function MainInterface() {
                       </div>
                     </TabsContent>
                   </Tabs>
-                )}
+                </TabsContent>
             </div>
-        </div>
+        </Tabs>
       </ResizablePanel>
     </ResizablePanelGroup>
   );

@@ -3,6 +3,8 @@
 import { generateCodeFromVibe } from '@/ai/flows/generate-code-from-vibe';
 import { z } from 'zod';
 import { ModelId } from 'genkit/ai';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const VibeSchema = z.object({
   vibe: z.string().min(10, { message: 'Please describe the vibe in at least 10 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
@@ -15,6 +17,7 @@ export type FormState = {
   terminalOutput?: string;
   error?: string;
   success?: boolean;
+  componentKey?: number; // To force re-rendering of the dynamic component
 };
 
 export async function generateCode(
@@ -37,20 +40,27 @@ export async function generateCode(
       ? validatedFields.data.model as ModelId
       : undefined;
 
-    // We can't stream the response to the client action directly yet,
-    // so we'll await the full response here.
     const result = await generateCodeFromVibe({
       vibeDescription: validatedFields.data.vibe,
       model: selectedModel,
     });
 
-    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating code...\n\n${result.tsxCode}`;
+    const componentPath = path.join(process.cwd(), 'src', 'app', 'components', 'vibe-component.tsx');
+    // Ensure the generated code has 'use client' at the top
+    const componentCode = result.tsxCode.trim().startsWith("'use client'") || result.tsxCode.trim().startsWith('"use client"') 
+      ? result.tsxCode 
+      : `'use client';\n${result.tsxCode}`;
+
+    await fs.writeFile(componentPath, componentCode);
+
+    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating component...\nComponent written to src/app/components/vibe-component.tsx`;
 
     return {
       tsxCode: result.tsxCode,
       designTokens: result.designTokens,
       terminalOutput: terminalOutput,
       success: true,
+      componentKey: (prevState.componentKey || 0) + 1, // Increment key to force re-render
     };
   } catch (e) {
     console.error(e);

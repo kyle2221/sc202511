@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/summarize-existing-code.ts';
+import '@/ai/flows/refine-generated-code.ts';
+import '@/ai/flows/generate-code-from-vibe.ts';

@@ -49,7 +49,7 @@ Follow these instructions carefully:
     *   The component must be named \`AppComponent\`.
     *   It must be a functional component.
     *   It MUST import necessary components from libraries like \`lucide-react\` and shadcn/ui (e.g., \`@/components/ui/button\`, \`@/components/ui/card\`). Assume all shadcn/ui components are available.
-    *   Style the component using **standard Tailwind CSS classes** (e.g., \`bg-background\`, \`text-primary\`, \`border\`). Do NOT use custom CSS variables.
+    *   Style the component using **standard Tailwind CSS classes** (e.g., \`bg-background\`, \`text-primary\`, \`border\`).
     *   The component should be visually interesting and clearly demonstrate the requested app. It should not be a simple placeholder. Create a small, self-contained example UI.
     *   The root element of the component MUST have the className \`"p-8 h-full w-full flex flex-col items-center justify-center"\`. This is critical for layout.
     *   Ensure the component is fully self-contained in the TSX string, including all necessary imports. Do NOT include the \`'use client'\` directive.

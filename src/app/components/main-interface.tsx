@@ -4,27 +4,18 @@ import { useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import { useActionState } from 'react';
-import { Copy, Check, Wand2, Loader2, Code, Eye, Bot, Terminal, Download } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download, GitPullRequest } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { FileTree } from '@/app/components/file-tree';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const initialTokens = `:root {
@@ -55,7 +46,7 @@ type TerminalLine = {
 };
 
 const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: 'Terminal is ready. Try `generate retro cyberpunk` or `clear`.' },
+    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build.' },
 ];
 
 const initialState: FormState = {
@@ -66,14 +57,10 @@ const initialState: FormState = {
 };
 
 const PreviewLoading = () => (
-    <div className="w-full h-full flex items-center justify-center p-8">
+    <div className="w-full h-full flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md flex flex-col items-center gap-4">
-            <Skeleton className="h-12 w-3/4" />
-            <Skeleton className="h-6 w-1/2" />
-            <div className="flex gap-4 mt-8 w-full">
-                <Skeleton className="h-12 flex-1" />
-                <Skeleton className="h-12 w-24" />
-            </div>
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Generating component...</p>
         </div>
     </div>
 );
@@ -82,8 +69,8 @@ const PreviewLoading = () => (
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full text-base py-6 font-bold tracking-wide">
-      {pending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5" />}
+    <Button type="submit" disabled={pending} size="sm">
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
       Generate
     </Button>
   );
@@ -153,19 +140,10 @@ export function MainInterface() {
     const newHistory: TerminalLine[] = [...terminalHistory, { type: 'input', content: command }];
     setTerminalHistory(newHistory);
     setTerminalInput('');
-
-    const [commandName, ...args] = command.split(' ');
-    const vibe = args.join(' ');
-
-    if (commandName === 'generate' && vibe) {
-        const formData = new FormData();
-        formData.append('vibe', vibe);
-        formAction(formData);
-    } else if (commandName === 'clear') {
-        setTerminalHistory([]);
-    } else {
-        setTerminalHistory(prev => [...prev, { type: 'output', content: `Command not found: ${commandName}. Try 'generate <your vibe>' or 'clear'.` }]);
-    }
+    
+    const formData = new FormData();
+    formData.append('vibe', command);
+    formAction(formData);
   };
 
 
@@ -209,39 +187,46 @@ export function MainInterface() {
   }, [terminalHistory]);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="flex-1">
+    <ResizablePanelGroup direction="horizontal" className="flex-1 border-t">
       <style id="preview-styles">{`
         .preview-scope {
           ${initialState.designTokens.match(/:root\s*{([^}]+)}/)?.[1] || ''}
         }
       `}</style>
       
-      <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="bg-secondary/30">
-        <FileTree />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-
-      <ResizablePanel defaultSize={35} minSize={25} maxSize={45}>
+      <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
         <ResizablePanelGroup direction="vertical">
-          <ResizablePanel defaultSize={60} minSize={40}>
-            <div className="flex flex-col h-full p-6 border-r">
-                <form ref={formRef} action={formAction} className="flex flex-col gap-4 flex-1">
-                  <Label htmlFor="vibe" className="text-base text-muted-foreground font-medium">Describe your vibe</Label>
-                  <Textarea
-                    id="vibe"
-                    name="vibe"
-                    placeholder="e.g., retro cyberpunk, minimalist workspace, vaporwave dream..."
-                    className="flex-1 text-base font-code bg-background/50 border-input focus:border-primary/50 text-foreground/90 p-4"
-                    rows={8}
-                    required
-                  />
-                  
-                  <SubmitButton />
-                </form>
+          <ResizablePanel defaultSize={75} minSize={50}>
+            <div className="flex flex-col h-full p-4 md:p-6">
+                <div className="flex-1 flex flex-col gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-semibold tracking-tight">Prompt</h2>
+                    <p className="text-muted-foreground text-sm">Describe the component you want to build.</p>
+                  </div>
+                  <form ref={formRef} action={formAction} className="flex-1 flex flex-col gap-4">
+                    <Textarea
+                      id="vibe"
+                      name="vibe"
+                      placeholder="e.g., A login form with a dark theme and a subtle glow effect on focus..."
+                      className="flex-1 text-base font-mono bg-background/50 border-input focus:border-primary/50 text-foreground/90 p-4 resize-none"
+                      required
+                    />
+                    <div className="flex items-center">
+                      <p className="text-xs text-muted-foreground">
+                        Press <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                          <span className="text-xs">⌘</span>J
+                        </kbd> to focus
+                      </p>
+                      <div className="ml-auto">
+                        <SubmitButton />
+                      </div>
+                    </div>
+                  </form>
+                </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={40} minSize={20}>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={25} minSize={20}>
             <div className="h-full flex flex-col">
               <div className="p-2 border-b border-t flex items-center gap-2">
                 <Terminal className="h-4 w-4" />
@@ -272,13 +257,13 @@ export function MainInterface() {
 
       <ResizableHandle withHandle />
 
-      <ResizablePanel defaultSize={45}>
-        <Tabs defaultValue="preview" className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-2 border-b">
-                 <TabsList>
+      <ResizablePanel defaultSize={60}>
+        <Tabs defaultValue="preview" className="flex flex-col h-full w-full">
+            <div className="flex items-center p-2 border-b">
+                 <TabsList className="grid grid-cols-2 h-auto">
                     <TabsTrigger value="preview">
                         <Eye className="mr-2 h-4 w-4" />
-                        Prototype
+                        Preview
                     </TabsTrigger>
                     <TabsTrigger value="code">
                         <Code className="mr-2 h-4 w-4" />
@@ -286,25 +271,26 @@ export function MainInterface() {
                     </TabsTrigger>
                  </TabsList>
             </div>
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto bg-zinc-950">
                  <TabsContent value="preview" className="mt-0 h-full">
-                     <div className="preview-scope p-8 h-full flex flex-col items-center justify-center bg-background">
+                     <div className="preview-scope h-full flex flex-col items-center justify-center bg-background">
                        <DynamicVibeComponent key={state.componentKey} />
                     </div>
                 </TabsContent>
-                <TabsContent value="code" className="flex flex-col h-full m-0 bg-secondary/30">
-                  <Tabs defaultValue="tsx" className="flex flex-col h-full bg-transparent p-2">
-                    <div className="flex items-center justify-between">
-                      <TabsList>
-                        <TabsTrigger value="tsx">Component.tsx</TabsTrigger>
-                        <TabsTrigger value="tokens">tokens.css</TabsTrigger>
+                <TabsContent value="code" className="flex flex-col h-full m-0 p-0">
+                  <Tabs defaultValue="tsx" className="flex flex-col h-full bg-transparent">
+                    <div className="flex items-center border-b bg-zinc-900">
+                      <TabsList className="bg-transparent border-b-0 rounded-none p-0 h-auto">
+                        <TabsTrigger value="tsx" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Component.tsx</TabsTrigger>
+                        <TabsTrigger value="tokens" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">tokens.css</TabsTrigger>
+                        <TabsTrigger value="diff" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Diff</TabsTrigger>
                       </TabsList>
                     </div>
-                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-2 relative">
+                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-0 relative">
                       <Textarea
                         value={state.tsxCode}
                         readOnly
-                        className="font-code text-sm h-full resize-none bg-background/50 border-input"
+                        className="font-mono text-sm h-full resize-none bg-transparent border-0 rounded-none focus-visible:ring-0"
                         aria-label="TSX Output"
                       />
                       <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -312,16 +298,29 @@ export function MainInterface() {
                         <DownloadButton textToDownload={state.tsxCode || ''} filename="VibeComponent.tsx" />
                       </div>
                     </TabsContent>
-                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-2 relative">
+                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-0 relative">
                       <Textarea
                         value={state.designTokens}
                         readOnly
-                        className="font-code text-sm h-full resize-none bg-background/50 border-input"
+                        className="font-mono text-sm h-full resize-none bg-transparent border-0 rounded-none focus-visible:ring-0"
                         aria-label="Design Tokens Output"
                       />
                         <div className="absolute top-2 right-2 flex items-center gap-1">
                           <CopyButton textToCopy={state.designTokens || ''} />
                           <DownloadButton textToDownload={state.designTokens || ''} filename="tokens.css" />
+                        </div>
+                    </TabsContent>
+                     <TabsContent value="diff" className="flex-1 flex flex-col mt-0 relative">
+                        <div className="flex-1 flex items-center justify-center">
+                          <Card className="max-w-sm text-center">
+                            <CardContent className="p-6">
+                              <GitPullRequest className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
+                              <h3 className="font-semibold">No changes yet</h3>
+                              <p className="text-sm text-muted-foreground">
+                                After the first generation, you'll see the code difference here.
+                              </p>
+                            </CardContent>
+                          </Card>
                         </div>
                     </TabsContent>
                   </Tabs>

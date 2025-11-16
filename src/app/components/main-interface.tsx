@@ -253,6 +253,7 @@ export function MainInterface() {
                         <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
                         <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
                         <SelectItem value="fox-code-b1.2">fox code b1.2</SelectItem>
+                        <SelectItem value="googleai/gemini-2.5-flash-experimental">Gemini Flash Experimental</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -3,7 +3,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef, useActionState } from 'react';
-import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download, Languages } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LivePreview } from '@/app/components/live-preview';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 function SubmitButton() {
@@ -102,7 +103,7 @@ export default function AppComponent() {
 }`;
 
 const initialState: FormState = {
-  tsxCode: initialCode,
+  generatedCode: initialCode,
   terminalOutput: '',
   componentKey: 0,
 };
@@ -124,14 +125,25 @@ const randomAppPrompts = [
   "A movie ticket booking interface with a seat selection map."
 ];
 
+const languageOptions = {
+    'TypeScript (React)': 'AppComponent.tsx',
+    'Python': 'script.py',
+    'HTML': 'index.html',
+    'JavaScript': 'script.js',
+    'CSS': 'styles.css'
+};
+
+type Language = keyof typeof languageOptions;
+
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
-  const [editableCode, setEditableCode] = useState(initialState.tsxCode || '');
+  const [editableCode, setEditableCode] = useState(initialState.generatedCode || '');
 
   const { toast } = useToast();
   const terminalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
+  const [language, setLanguage] = useState<Language>('TypeScript (React)');
   
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
@@ -171,9 +183,9 @@ export function MainInterface() {
       toast({ variant: 'destructive', title: 'Generation Failed', description: state.error });
       setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: ${state.error}`}]);
     }
-    if (state.success && state.tsxCode) {
+    if (state.success && state.generatedCode) {
       toast({ title: 'Success!', description: 'New component has been generated.' });
-      setEditableCode(state.tsxCode); // Update the editor with newly generated code
+      setEditableCode(state.generatedCode); // Update the editor with newly generated code
       
       if(state.terminalOutput) {
          setTerminalHistory(prev => [...prev, {type: 'output', content: state.terminalOutput!}]);
@@ -198,6 +210,9 @@ export function MainInterface() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const showPreview = language === 'TypeScript (React)';
+  const filename = languageOptions[language] || 'code.txt';
+
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1 border-t-zinc-700/50 border-t">
       
@@ -208,7 +223,7 @@ export function MainInterface() {
                 <div className="flex-1 flex flex-col gap-4">
                   <div className="space-y-1">
                     <h2 className="text-xl font-semibold tracking-tight">Prompt</h2>
-                    <p className="text-muted-foreground text-sm">Describe the app you want to build.</p>
+                    <p className="text-muted-foreground text-sm">Describe what you want to build and in which language.</p>
                   </div>
                   <form ref={formRef} action={formAction} className="flex-1 flex flex-col gap-4">
                     <Textarea
@@ -221,15 +236,29 @@ export function MainInterface() {
                       onChange={(e) => setApp(e.target.value)}
                     />
                     <input type="hidden" name="model" value={model} />
-                    <div className="flex items-center">
+                    <input type="hidden" name="language" value={language} />
+                    <div className="flex flex-wrap items-center gap-2">
                        <Select value={model} onValueChange={setModel}>
-                        <SelectTrigger className="w-[280px] h-9">
+                        <SelectTrigger className="w-full sm:w-[240px] h-9">
                           <SelectValue placeholder="Select a model" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="openrouter/sherlock-dash-alpha">Sherlock Dash Alpha</SelectItem>
                           <SelectItem value="openrouter/sherlock-think-alpha">Sherlock Think Alpha</SelectItem>
                           <SelectItem value="kwaipilot/kat-coder-pro:free">Kat Coder Pro (Free)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+                        <SelectTrigger className="w-full sm:w-[200px] h-9">
+                           <div className="flex items-center gap-2">
+                            <Languages className="h-4 w-4" />
+                            <SelectValue placeholder="Select language" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(languageOptions).map(lang => (
+                            <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <div className="ml-auto">
@@ -273,10 +302,10 @@ export function MainInterface() {
       <ResizableHandle withHandle />
 
       <ResizablePanel defaultSize={60}>
-        <Tabs defaultValue="preview" className="flex flex-col h-full w-full">
+        <Tabs defaultValue="preview" value={showPreview ? "preview" : "code"} className="flex flex-col h-full w-full">
             <div className="flex items-center p-2 border-b border-zinc-700">
                  <TabsList className="grid grid-cols-2 h-auto bg-zinc-900">
-                    <TabsTrigger value="preview">
+                    <TabsTrigger value="preview" disabled={!showPreview}>
                         <Eye className="mr-2 h-4 w-4" />
                         Preview
                     </TabsTrigger>
@@ -288,20 +317,32 @@ export function MainInterface() {
             </div>
             <div className="flex-1 overflow-auto bg-zinc-950">
                  <TabsContent value="preview" className="mt-0 h-full">
-                     <div className="preview-scope h-full flex flex-col items-center justify-center bg-background">
-                       <LivePreview code={editableCode} />
-                    </div>
+                    {showPreview ? (
+                      <div className="preview-scope h-full flex flex-col items-center justify-center bg-background">
+                        <LivePreview code={editableCode} />
+                      </div>
+                    ) : (
+                      <div className="p-8 h-full w-full flex flex-col items-center justify-center">
+                        <Alert>
+                          <Languages className="h-4 w-4" />
+                          <AlertTitle>Preview Not Available</AlertTitle>
+                          <AlertDescription>
+                            Live preview is only available for TypeScript (React). You can view the generated code in the "Code" tab.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 p-0 relative bg-black">
                       <Textarea
                         value={editableCode}
                         onChange={(e) => setEditableCode(e.target.value)}
                         className="font-mono text-sm h-full resize-none bg-transparent border-0 rounded-none focus-visible:ring-0"
-                        aria-label="TSX Output"
+                        aria-label="Generated Code Output"
                       />
                       <div className="absolute top-2 right-2 flex items-center gap-1">
                         <CopyButton textToCopy={editableCode || ''} />
-                        <DownloadButton textToDownload={editableCode || ''} filename="AppComponent.tsx" />
+                        <DownloadButton textToDownload={editableCode || ''} filename={filename} />
                       </div>
                 </TabsContent>
             </div>

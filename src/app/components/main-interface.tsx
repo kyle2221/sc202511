@@ -92,7 +92,7 @@ type TerminalLine = {
 };
 
 const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build and type `generate`.' },
+    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`.\nAvailable commands: 'generate', 'generate: random_app', 'clear'." },
 ];
 
 const initialState: FormState = {
@@ -119,6 +119,19 @@ export default function AppComponent() {
   terminalOutput: '',
   componentKey: 0,
 };
+
+const randomAppPrompts = [
+  "A futuristic music player with a glowing equalizer and playlist controls.",
+  "A retro-style weather app with pixel art icons and a CRT screen effect.",
+  "An elegant dashboard for a smart home, with controls for lights, temperature, and security.",
+  "A minimalist to-do list application with satisfying check animations.",
+  "A cyberpunk-themed login form with neon borders and glitch effects.",
+  "A coffee shop's online ordering page, with a cozy and warm aesthetic.",
+  "A user profile card for a social media app, featuring a sleek design and stats.",
+  "A file upload component that shows a progress bar and a preview of the uploaded image.",
+  "A pricing table for a SaaS product with three tiers and highlighted features.",
+  "A movie ticket booking interface with a seat selection map."
+];
 
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
@@ -153,10 +166,19 @@ export function MainInterface() {
       // Trigger the form submission
       const formData = new FormData(formRef.current!);
       formAction(formData);
+    } else if (command.toLowerCase() === 'generate: random_app') {
+      const randomPrompt = randomAppPrompts[Math.floor(Math.random() * randomAppPrompts.length)];
+      setApp(randomPrompt);
+      setTerminalHistory(prev => [...prev, {type: 'output', content: `Selected random prompt: "${randomPrompt}"\nGenerating...`}]);
+      // Use a timeout to allow the state to update before submitting the form
+      setTimeout(() => {
+        const formData = new FormData(formRef.current!);
+        formAction(formData);
+      }, 100);
     } else if (command.toLowerCase() === 'clear') {
         setTerminalHistory([]);
     } else {
-        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'clear'.`}]);
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'generate: random_app', 'clear'.`}]);
     }
   };
 
@@ -311,3 +333,5 @@ export function MainInterface() {
     </ResizablePanelGroup>
   );
 }
+
+    

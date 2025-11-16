@@ -2,9 +2,7 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { useEffect, useState, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import { useActionState } from 'react';
+import { useEffect, useState, useRef, useActionState } from 'react';
 import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -22,21 +20,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { LivePreview } from '@/app/components/live-preview';
 
-const PreviewLoading = () => (
-    <div className="w-full h-full flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Generating component...</p>
-        </div>
-    </div>
-);
-
-const DynamicAppComponent = dynamic(() => import('@/app/components/app-component'), {
-    ssr: false,
-    loading: () => <PreviewLoading />,
-});
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -96,15 +82,9 @@ type TerminalLine = {
   content: string;
 };
 
-const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`." },
-];
+const initialCode = `"use client";
 
-const initialState: FormState = {
-  tsxCode: `
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function AppComponent() {
   return (
@@ -119,11 +99,17 @@ export default function AppComponent() {
       </CardHeader>
     </Card>
   );
-}
-  `,
+}`;
+
+const initialState: FormState = {
+  tsxCode: initialCode,
   terminalOutput: '',
   componentKey: 0,
 };
+
+const initialTerminalHistory: TerminalLine[] = [
+    { type: 'output', content: "Terminal is ready. Type `generate` to create a component from the prompt." },
+];
 
 const randomAppPrompts = [
   "A futuristic music player with a glowing equalizer and playlist controls.",
@@ -140,12 +126,13 @@ const randomAppPrompts = [
 
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
+  const [editableCode, setEditableCode] = useState(initialState.tsxCode || '');
+
   const { toast } = useToast();
   const terminalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
   
-
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
   const [app, setApp] = useState('');
@@ -164,14 +151,12 @@ export function MainInterface() {
         setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: Please describe the component you want to build in the prompt area first.`}]);
         return;
       }
-      // Trigger the form submission
       const formData = new FormData(formRef.current!);
       formAction(formData);
     } else if (command.toLowerCase() === 'generate: random_app') {
       const randomPrompt = randomAppPrompts[Math.floor(Math.random() * randomAppPrompts.length)];
       setApp(randomPrompt);
       setTerminalHistory(prev => [...prev, {type: 'output', content: `Selected random prompt: "${randomPrompt}"\nGenerating...`}]);
-      // Use a timeout to allow the state to update before submitting the form
       setTimeout(() => {
         const formData = new FormData(formRef.current!);
         formAction(formData);
@@ -181,20 +166,20 @@ export function MainInterface() {
     }
   };
 
-
   useEffect(() => {
     if (state.error) {
       toast({ variant: 'destructive', title: 'Generation Failed', description: state.error });
       setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: ${state.error}`}]);
     }
-    if (state.success) {
+    if (state.success && state.tsxCode) {
       toast({ title: 'Success!', description: 'New component has been generated.' });
+      setEditableCode(state.tsxCode); // Update the editor with newly generated code
       
       if(state.terminalOutput) {
          setTerminalHistory(prev => [...prev, {type: 'output', content: state.terminalOutput!}]);
       }
     }
-  }, [state.error, state.success, state.terminalOutput, toast]);
+  }, [state, toast]);
 
    useEffect(() => {
     if (terminalRef.current) {
@@ -304,19 +289,19 @@ export function MainInterface() {
             <div className="flex-1 overflow-auto bg-zinc-950">
                  <TabsContent value="preview" className="mt-0 h-full">
                      <div className="preview-scope h-full flex flex-col items-center justify-center bg-background">
-                       <DynamicAppComponent key={state.componentKey} />
+                       <LivePreview code={editableCode} />
                     </div>
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 p-0 relative bg-black">
                       <Textarea
-                        value={state.tsxCode}
-                        readOnly
+                        value={editableCode}
+                        onChange={(e) => setEditableCode(e.target.value)}
                         className="font-mono text-sm h-full resize-none bg-transparent border-0 rounded-none focus-visible:ring-0"
                         aria-label="TSX Output"
                       />
                       <div className="absolute top-2 right-2 flex items-center gap-1">
-                        <CopyButton textToCopy={state.tsxCode || ''} />
-                        <DownloadButton textToDownload={state.tsxCode || ''} filename="AppComponent.tsx" />
+                        <CopyButton textToCopy={editableCode || ''} />
+                        <DownloadButton textToDownload={editableCode || ''} filename="AppComponent.tsx" />
                       </div>
                 </TabsContent>
             </div>

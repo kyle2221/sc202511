@@ -49,12 +49,13 @@ export async function generateCode(
       ? result.tsxCode 
       : `'use client';\n${result.tsxCode}`;
 
+    // We no longer write the file for preview, but we can still write it for download/reference.
     await fs.writeFile(componentPath, componentCode);
 
-    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating component...\nComponent written to src/app/components/app-component.tsx`;
+    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGeneration complete. Preview updated.`;
 
     return {
-      tsxCode: result.tsxCode,
+      tsxCode: componentCode, // Return the full component code to the client
       terminalOutput: terminalOutput,
       success: true,
       componentKey: (prevState.componentKey || 0) + 1, // Increment key to force re-render

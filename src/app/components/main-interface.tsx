@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormStatus } from 'react-dom';
@@ -92,7 +93,7 @@ type TerminalLine = {
 };
 
 const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`.\nAvailable commands: 'generate', 'generate: random_app', 'clear'." },
+    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`.\nAvailable commands: 'generate', 'generate: random_app'." },
 ];
 
 const initialState: FormState = {
@@ -175,10 +176,8 @@ export function MainInterface() {
         const formData = new FormData(formRef.current!);
         formAction(formData);
       }, 100);
-    } else if (command.toLowerCase() === 'clear') {
-        setTerminalHistory([]);
     } else {
-        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'generate: random_app', 'clear'.`}]);
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'generate: random_app'.`}]);
     }
   };
 
@@ -333,5 +332,7 @@ export function MainInterface() {
     </ResizablePanelGroup>
   );
 }
+
+    
 
     

@@ -92,10 +92,10 @@ export default function AppComponent() {
     <Card className="p-8 text-center bg-transparent border-0 shadow-none">
       <CardHeader>
         <CardTitle className="text-2xl font-semibold text-foreground mb-2">
-          Something amazing is cooking up...
+          Build something now
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Describe an app in the panel to get started.
+          Make the dream happen by typing the prompt.
         </CardDescription>
       </CardHeader>
     </Card>
@@ -351,3 +351,5 @@ export function MainInterface() {
     </ResizablePanelGroup>
   );
 }
+
+    

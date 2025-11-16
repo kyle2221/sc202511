@@ -38,7 +38,7 @@ export async function generateCodeFromVibe(
 
 const prompt = ai.definePrompt({
   name: 'generateCodeFromVibePrompt',
-  input: {schema: z.object({ vibeDescription: GenerateCodeFromVibeInputSchema.shape.vibeDescription })},
+  input: {schema: GenerateCodeFromVibeInputSchema},
   output: {schema: GenerateCodeFromVibeOutputSchema},
   prompt: `You are an expert web designer and developer, specializing in creating beautiful and functional user interfaces with React, TypeScript, and Tailwind CSS. You will be given a "vibe" description and your task is to generate a complete, single-file React component (.tsx) and a set of corresponding design tokens (CSS variables).
 
@@ -75,7 +75,7 @@ const generateCodeFromVibeFlow = ai.defineFlow(
       {
         prompt: prompt.prompt!,
         model: openAI(input.model as string),
-        input: { vibeDescription: input.vibeDescription },
+        input: { vibeDescription: input.vibeDescription, model: input.model },
         output: { schema: prompt.output?.schema! },
       }
     );

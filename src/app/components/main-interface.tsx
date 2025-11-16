@@ -2,7 +2,7 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { useEffect, useState, useRef, useTransition } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useActionState } from 'react';
 import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download } from 'lucide-react';
@@ -33,6 +33,10 @@ const PreviewLoading = () => (
     </div>
 );
 
+const DynamicAppComponent = dynamic(() => import('@/app/components/app-component'), {
+    ssr: false,
+    loading: () => <PreviewLoading />,
+});
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -141,10 +145,6 @@ export function MainInterface() {
   const formRef = useRef<HTMLFormElement>(null);
   const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
   
-  const [DynamicAppComponent, setDynamicAppComponent] = useState(() => () => (
-    <div dangerouslySetInnerHTML={{ __html: '' }} />
-  ));
-  const [isPending, startTransition] = useTransition();
 
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
@@ -193,15 +193,8 @@ export function MainInterface() {
       if(state.terminalOutput) {
          setTerminalHistory(prev => [...prev, {type: 'output', content: state.terminalOutput!}]);
       }
-      
-      startTransition(() => {
-        setDynamicAppComponent(() => dynamic(() => import('@/app/components/app-component'), {
-            ssr: false,
-            loading: () => <PreviewLoading />,
-        }));
-      });
     }
-  }, [state, toast]);
+  }, [state.error, state.success, state.terminalOutput, toast]);
 
    useEffect(() => {
     if (terminalRef.current) {
@@ -332,7 +325,3 @@ export function MainInterface() {
     </ResizablePanelGroup>
   );
 }
-
-    
-
-    

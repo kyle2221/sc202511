@@ -8,7 +8,6 @@ import path from 'path';
 
 const VibeSchema = z.object({
   vibe: z.string().min(3, { message: 'Please describe the vibe in at least 3 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
-  model: z.string().optional(),
 });
 
 export type FormState = {
@@ -26,7 +25,6 @@ export async function generateCode(
 ): Promise<FormState> {
   const validatedFields = VibeSchema.safeParse({
     vibe: formData.get('vibe'),
-    model: formData.get('model'),
   });
 
   if (!validatedFields.success) {
@@ -36,18 +34,9 @@ export async function generateCode(
   }
 
   try {
-    const modelString = validatedFields.data.model;
-    let selectedModel: ModelId | undefined;
-
-    if (modelString === 'fox-code-b1.2') {
-      selectedModel = 'googleai/gemini-2.5-flash';
-    } else if (modelString && modelString !== 'auto') {
-      selectedModel = modelString as ModelId;
-    }
-
+    
     const result = await generateCodeFromVibe({
       vibeDescription: validatedFields.data.vibe,
-      model: selectedModel,
     });
 
     const componentPath = path.join(process.cwd(), 'src', 'app', 'components', 'vibe-component.tsx');

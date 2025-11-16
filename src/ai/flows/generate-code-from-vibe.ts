@@ -18,7 +18,6 @@ const GenerateCodeFromVibeInputSchema = z.object({
     .describe(
       'A natural language description of the desired aesthetic vibe (e.g., \'retro cyberpunk\', \'minimalist workspace\').'
     ),
-  model: z.custom<ModelId>().optional().describe('The AI model to use for generation.'),
 });
 export type GenerateCodeFromVibeInput = z.infer<typeof GenerateCodeFromVibeInputSchema>;
 
@@ -71,8 +70,7 @@ const generateCodeFromVibeFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(
-        { vibeDescription: input.vibeDescription },
-        { model: input.model }
+        { vibeDescription: input.vibeDescription }
     );
     return output!;
   }

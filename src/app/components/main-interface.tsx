@@ -160,8 +160,6 @@ export function MainInterface() {
     if (commandName === 'generate' && vibe) {
         const formData = new FormData();
         formData.append('vibe', vibe);
-        // You can also append the selected model if you have it in state
-        // formData.append('model', selectedModel);
         formAction(formData);
     } else if (commandName === 'clear') {
         setTerminalHistory([]);
@@ -237,26 +235,7 @@ export function MainInterface() {
                     rows={8}
                     required
                   />
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="model" className="text-sm text-muted-foreground">Select AI Model</Label>
-                    <Select name="model" defaultValue="auto">
-                      <SelectTrigger className="w-full bg-background/50 border-input">
-                        <SelectValue placeholder="Select a model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">
-                          <div className="flex items-center gap-2">
-                            <Bot className="h-4 w-4" />
-                            <span>Auto</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                        <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
-                        <SelectItem value="fox-code-b1.2">fox code b1.2</SelectItem>
-                        <SelectItem value="googleai/gemini-2.5-flash-experimental">Gemini Flash Experimental</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
                   <SubmitButton />
                 </form>
             </div>

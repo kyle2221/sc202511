@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generateCodeFromApp } from '@/ai/flows/generate-code-from-app';
@@ -52,7 +53,7 @@ export async function generateCode(
     let componentCode = result.generatedCode;
     
     // Ensure 'use client' is present only for React components
-    if (validatedFields.data.language === 'TypeScript (React)') {
+    if (validatedFields.data.language === 'TypeScript (React) (recommended)') {
       componentCode = result.generatedCode.trim().startsWith("'use client'") || result.generatedCode.trim().startsWith('"use client"') 
         ? result.generatedCode 
         : `'use client';\n${result.generatedCode}`;

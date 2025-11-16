@@ -126,7 +126,7 @@ const randomAppPrompts = [
 ];
 
 const languageOptions = {
-    'TypeScript (React)': 'AppComponent.tsx',
+    'TypeScript (React) (recommended)': 'AppComponent.tsx',
     'Python': 'script.py',
     'HTML': 'index.html',
     'JavaScript': 'script.js',
@@ -143,7 +143,7 @@ export function MainInterface() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
-  const [language, setLanguage] = useState<Language>('TypeScript (React)');
+  const [language, setLanguage] = useState<Language>('TypeScript (React) (recommended)');
   
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
@@ -210,7 +210,7 @@ export function MainInterface() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const showPreview = language === 'TypeScript (React)';
+  const showPreview = language === 'TypeScript (React) (recommended)';
   const filename = languageOptions[language] || 'code.txt';
 
   return (

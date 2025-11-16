@@ -2,7 +2,7 @@
 
 import { generateCodeFromApp } from '@/ai/flows/generate-code-from-app';
 import { z } from 'zod';
-import { ModelId } from 'genkit/ai';
+import { ModelId } from 'genkit';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -13,7 +13,6 @@ const AppSchema = z.object({
 
 export type FormState = {
   tsxCode?: string;
-  designTokens?: string;
   terminalOutput?: string;
   error?: string;
   success?: boolean;
@@ -56,7 +55,6 @@ export async function generateCode(
 
     return {
       tsxCode: result.tsxCode,
-      designTokens: result.designTokens,
       terminalOutput: terminalOutput,
       success: true,
       componentKey: (prevState.componentKey || 0) + 1, // Increment key to force re-render

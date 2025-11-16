@@ -4,12 +4,11 @@ import { useFormStatus } from 'react-dom';
 import { useEffect, useState, useRef, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import { useActionState } from 'react';
-import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download, GitPullRequest } from 'lucide-react';
+import { Copy, Check, Wand2, Loader2, Code, Eye, Terminal, Download } from 'lucide-react';
 import { generateCode, type FormState } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ResizableHandle,
@@ -23,64 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from '@/components/ui/skeleton';
-
-const initialTokens = `:root {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 5.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 205 90% 61%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 195 90% 45%;
-  --accent-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 205 90% 61%;
-  --radius: 0.75rem;
-}
-`;
-
-type TerminalLine = {
-  type: 'input' | 'output';
-  content: string;
-};
-
-const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build or type `generate`.' },
-];
-
-const initialState: FormState = {
-  tsxCode: `
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-
-export default function AppComponent() {
-  return (
-    <Card className="p-8 text-center bg-transparent border-0 shadow-none">
-      <CardHeader>
-        <CardTitle className="text-2xl font-semibold text-foreground mb-2">
-          Something amazing is cooking up...
-        </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Describe an app in the panel to get started.
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  );
-}
-  `,
-  designTokens: initialTokens,
-  terminalOutput: '',
-  componentKey: 0,
-};
 
 const PreviewLoading = () => (
     <div className="w-full h-full flex items-center justify-center p-8 bg-background">
@@ -145,6 +86,39 @@ function DownloadButton({ textToDownload, filename }: { textToDownload: string, 
   );
 }
 
+type TerminalLine = {
+  type: 'input' | 'output';
+  content: string;
+};
+
+const initialTerminalHistory: TerminalLine[] = [
+    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build and type `generate`.' },
+];
+
+const initialState: FormState = {
+  tsxCode: `
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+export default function AppComponent() {
+  return (
+    <Card className="p-8 text-center bg-transparent border-0 shadow-none">
+      <CardHeader>
+        <CardTitle className="text-2xl font-semibold text-foreground mb-2">
+          Something amazing is cooking up...
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Describe an app in the panel to get started.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+  `,
+  terminalOutput: '',
+  componentKey: 0,
+};
 
 export function MainInterface() {
   const [state, formAction] = useActionState(generateCode, initialState);
@@ -182,7 +156,7 @@ export function MainInterface() {
     } else if (command.toLowerCase() === 'clear') {
         setTerminalHistory([]);
     } else {
-        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}`}]);
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'clear'.`}]);
     }
   };
 
@@ -199,18 +173,6 @@ export function MainInterface() {
          setTerminalHistory(prev => [...prev, {type: 'output', content: state.terminalOutput!}]);
       }
       
-      if (state.designTokens) {
-           const styleElement = document.getElementById('preview-styles');
-            if (styleElement) {
-                const rootVariables = state.designTokens?.match(/:root\s*{([^}]+)}/)?.[1] || '';
-                styleElement.innerHTML = `
-                .preview-scope {
-                    ${rootVariables}
-                }
-                `;
-            }
-      }
-
       startTransition(() => {
         setDynamicAppComponent(() => dynamic(() => import('@/app/components/app-component'), {
             ssr: false,
@@ -239,11 +201,6 @@ export function MainInterface() {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="flex-1 border-t-zinc-700/50 border-t">
-      <style id="preview-styles">{`
-        .preview-scope {
-          ${initialState.designTokens.match(/:root\s*{([^}]+)}/)?.[1] || ''}
-        }
-      `}</style>
       
       <ResizablePanel defaultSize={40} minSize={30} maxSize={50}>
         <ResizablePanelGroup direction="vertical">
@@ -336,16 +293,7 @@ export function MainInterface() {
                        <DynamicAppComponent key={state.componentKey} />
                     </div>
                 </TabsContent>
-                <TabsContent value="code" className="flex flex-col h-full m-0 p-0">
-                  <Tabs defaultValue="tsx" className="flex flex-col h-full bg-transparent">
-                    <div className="flex items-center border-b border-zinc-700 bg-zinc-900">
-                      <TabsList className="bg-transparent border-b-0 rounded-none p-0 h-auto">
-                        <TabsTrigger value="tsx" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">Component.tsx</TabsTrigger>
-                        <TabsTrigger value="tokens" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">tokens.css</TabsTrigger>
-                        <TabsTrigger value="diff" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">Diff</TabsTrigger>
-                      </TabsList>
-                    </div>
-                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-0 relative bg-black">
+                <TabsContent value="code" className="flex flex-col h-full m-0 p-0 relative bg-black">
                       <Textarea
                         value={state.tsxCode}
                         readOnly
@@ -356,33 +304,6 @@ export function MainInterface() {
                         <CopyButton textToCopy={state.tsxCode || ''} />
                         <DownloadButton textToDownload={state.tsxCode || ''} filename="AppComponent.tsx" />
                       </div>
-                    </TabsContent>
-                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-0 relative bg-black">
-                      <Textarea
-                        value={state.designTokens}
-                        readOnly
-                        className="font-mono text-sm h-full resize-none bg-transparent border-0 rounded-none focus-visible:ring-0"
-                        aria-label="Design Tokens Output"
-                      />
-                        <div className="absolute top-2 right-2 flex items-center gap-1">
-                          <CopyButton textToCopy={state.designTokens || ''} />
-                          <DownloadButton textToDownload={state.designTokens || ''} filename="tokens.css" />
-                        </div>
-                    </TabsContent>
-                     <TabsContent value="diff" className="flex-1 flex flex-col mt-0 relative bg-black">
-                        <div className="flex-1 flex items-center justify-center">
-                          <Card className="max-w-sm text-center bg-transparent border-zinc-800">
-                            <CardContent className="p-6">
-                              <GitPullRequest className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
-                              <h3 className="font-semibold">No changes yet</h3>
-                              <p className="text-sm text-muted-foreground">
-                                After the first generation, you'll see the code difference here.
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                    </TabsContent>
-                  </Tabs>
                 </TabsContent>
             </div>
         </Tabs>

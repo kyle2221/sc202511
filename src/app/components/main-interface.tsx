@@ -97,7 +97,7 @@ type TerminalLine = {
 };
 
 const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`.\nAvailable commands: 'generate', 'generate: random_app'." },
+    { type: 'output', content: "Terminal is ready. Describe the UI you want to build and type `generate`." },
 ];
 
 const initialState: FormState = {
@@ -177,7 +177,7 @@ export function MainInterface() {
         formAction(formData);
       }, 100);
     } else {
-        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}. Available commands: 'generate', 'generate: random_app'.`}]);
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}.`}]);
     }
   };
 

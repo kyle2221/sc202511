@@ -9,7 +9,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import { ModelId } from 'genkit/ai';
+import { ModelId } from 'genkit';
+import { openAI } from 'genkitx-openai';
 
 
 const GenerateCodeFromVibeInputSchema = z.object({
@@ -72,8 +73,8 @@ const generateCodeFromVibeFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate(
       {
-        model: input.model,
         prompt: prompt.prompt!,
+        model: openAI(input.model as string),
         input: { vibeDescription: input.vibeDescription },
         output: { schema: prompt.output?.schema! },
       }

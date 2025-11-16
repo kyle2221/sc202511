@@ -62,7 +62,7 @@ const initialState: FormState = {
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-export default function VibeComponent() {
+export default function AppComponent() {
   return (
     <Card className="p-8 text-center bg-transparent border-0 shadow-none">
       <CardHeader>
@@ -70,7 +70,7 @@ export default function VibeComponent() {
           Something amazing is cooking up...
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Describe a vibe in the panel to get started.
+          Describe an app in the panel to get started.
         </CardDescription>
       </CardHeader>
     </Card>
@@ -153,14 +153,14 @@ export function MainInterface() {
   const formRef = useRef<HTMLFormElement>(null);
   const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
   
-  const [DynamicVibeComponent, setDynamicVibeComponent] = useState(() => () => (
+  const [DynamicAppComponent, setDynamicAppComponent] = useState(() => () => (
     <div dangerouslySetInnerHTML={{ __html: '' }} />
   ));
   const [isPending, startTransition] = useTransition();
 
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
-  const [vibe, setVibe] = useState('');
+  const [app, setApp] = useState('');
 
   const handleTerminalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -172,7 +172,7 @@ export function MainInterface() {
     setTerminalInput('');
 
     if (command.toLowerCase() === 'generate') {
-      if (!vibe) {
+      if (!app) {
         setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: Please describe the component you want to build in the prompt area first.`}]);
         return;
       }
@@ -212,7 +212,7 @@ export function MainInterface() {
       }
 
       startTransition(() => {
-        setDynamicVibeComponent(() => dynamic(() => import('@/app/components/vibe-component'), {
+        setDynamicAppComponent(() => dynamic(() => import('@/app/components/app-component'), {
             ssr: false,
             loading: () => <PreviewLoading />,
         }));
@@ -230,7 +230,7 @@ export function MainInterface() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
         e.preventDefault();
-        document.getElementById('vibe')?.focus();
+        document.getElementById('app')?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -252,17 +252,17 @@ export function MainInterface() {
                 <div className="flex-1 flex flex-col gap-4">
                   <div className="space-y-1">
                     <h2 className="text-xl font-semibold tracking-tight">Prompt</h2>
-                    <p className="text-muted-foreground text-sm">Describe the component you want to build.</p>
+                    <p className="text-muted-foreground text-sm">Describe the app you want to build.</p>
                   </div>
                   <form ref={formRef} action={formAction} className="flex-1 flex flex-col gap-4">
                     <Textarea
-                      id="vibe"
-                      name="vibe"
+                      id="app"
+                      name="app"
                       placeholder="e.g., A login form with a dark theme and a subtle glow effect on focus..."
                       className="flex-1 text-base bg-zinc-900/50 border-zinc-700 focus:border-primary/50 text-foreground/90 p-4 resize-none"
                       required
-                      value={vibe}
-                      onChange={(e) => setVibe(e.target.value)}
+                      value={app}
+                      onChange={(e) => setApp(e.target.value)}
                     />
                     <input type="hidden" name="model" value={model} />
                     <div className="flex items-center">
@@ -333,7 +333,7 @@ export function MainInterface() {
             <div className="flex-1 overflow-auto bg-zinc-950">
                  <TabsContent value="preview" className="mt-0 h-full">
                      <div className="preview-scope h-full flex flex-col items-center justify-center bg-background">
-                       <DynamicVibeComponent key={state.componentKey} />
+                       <DynamicAppComponent key={state.componentKey} />
                     </div>
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 p-0">
@@ -354,7 +354,7 @@ export function MainInterface() {
                       />
                       <div className="absolute top-2 right-2 flex items-center gap-1">
                         <CopyButton textToCopy={state.tsxCode || ''} />
-                        <DownloadButton textToDownload={state.tsxCode || ''} filename="VibeComponent.tsx" />
+                        <DownloadButton textToDownload={state.tsxCode || ''} filename="AppComponent.tsx" />
                       </div>
                     </TabsContent>
                     <TabsContent value="tokens" className="flex-1 flex flex-col mt-0 relative bg-black">

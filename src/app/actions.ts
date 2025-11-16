@@ -1,13 +1,13 @@
 'use server';
 
-import { generateCodeFromVibe } from '@/ai/flows/generate-code-from-vibe';
+import { generateCodeFromApp } from '@/ai/flows/generate-code-from-app';
 import { z } from 'zod';
 import { ModelId } from 'genkit/ai';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const VibeSchema = z.object({
-  vibe: z.string().min(3, { message: 'Please describe the vibe in at least 3 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
+const AppSchema = z.object({
+  app: z.string().min(3, { message: 'Please describe the app in at least 3 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
   model: z.string(),
 });
 
@@ -24,27 +24,27 @@ export async function generateCode(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const validatedFields = VibeSchema.safeParse({
-    vibe: formData.get('vibe'),
+  const validatedFields = AppSchema.safeParse({
+    app: formData.get('app'),
     model: formData.get('model'),
   });
 
   if (!validatedFields.success) {
-    const vibeError = validatedFields.error.flatten().fieldErrors.vibe?.[0];
+    const appError = validatedFields.error.flatten().fieldErrors.app?.[0];
     const modelError = validatedFields.error.flatten().fieldErrors.model?.[0];
     return {
-      error: vibeError || modelError || 'Invalid input.',
+      error: appError || modelError || 'Invalid input.',
     };
   }
 
   try {
     
-    const result = await generateCodeFromVibe({
-      vibeDescription: validatedFields.data.vibe,
+    const result = await generateCodeFromApp({
+      appDescription: validatedFields.data.app,
       model: validatedFields.data.model as ModelId,
     });
 
-    const componentPath = path.join(process.cwd(), 'src', 'app', 'components', 'vibe-component.tsx');
+    const componentPath = path.join(process.cwd(), 'src', 'app', 'components', 'app-component.tsx');
     // Ensure the generated code has 'use client' at the top
     const componentCode = result.tsxCode.trim().startsWith("'use client'") || result.tsxCode.trim().startsWith('"use client"') 
       ? result.tsxCode 
@@ -52,7 +52,7 @@ export async function generateCode(
 
     await fs.writeFile(componentPath, componentCode);
 
-    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating component...\nComponent written to src/app/components/vibe-component.tsx`;
+    const terminalOutput = `AI thinking...\n${result.thoughts}\n\nGenerating component...\nComponent written to src/app/components/app-component.tsx`;
 
     return {
       tsxCode: result.tsxCode,
@@ -65,7 +65,7 @@ export async function generateCode(
     console.error(e);
     const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
     return {
-      error: `An unexpected error occurred. The vibe might be too unusual. Please try again. Details: ${errorMessage}`,
+      error: `An unexpected error occurred. The app description might be too unusual. Please try again. Details: ${errorMessage}`,
       terminalOutput: `> Generation failed!\n> ${errorMessage}`
     };
   }

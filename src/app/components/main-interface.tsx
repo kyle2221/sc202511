@@ -16,6 +16,13 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from '@/components/ui/skeleton';
 
 const initialTokens = `:root {
@@ -46,11 +53,30 @@ type TerminalLine = {
 };
 
 const initialTerminalHistory: TerminalLine[] = [
-    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build.' },
+    { type: 'output', content: 'Terminal is ready. Describe the UI you want to build or type `generate`.' },
 ];
 
 const initialState: FormState = {
-  tsxCode: '',
+  tsxCode: `
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+export default function VibeComponent() {
+  return (
+    <Card className="p-8 text-center bg-transparent border-0 shadow-none">
+      <CardHeader>
+        <CardTitle className="text-2xl font-semibold text-foreground mb-2">
+          Something amazing is cooking up...
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Describe a vibe in the panel to get started.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+  `,
   designTokens: initialTokens,
   terminalOutput: '',
   componentKey: 0,
@@ -69,7 +95,7 @@ const PreviewLoading = () => (
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} size="sm">
+    <Button type="submit" disabled={pending}>
       {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
       Generate
     </Button>
@@ -125,12 +151,16 @@ export function MainInterface() {
   const { toast } = useToast();
   const terminalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [model, setModel] = useState('openrouter/sherlock-dash-alpha');
   
-  const [DynamicVibeComponent, setDynamicVibeComponent] = useState(() => () => <PreviewLoading />);
+  const [DynamicVibeComponent, setDynamicVibeComponent] = useState(() => () => (
+    <div dangerouslySetInnerHTML={{ __html: '' }} />
+  ));
   const [isPending, startTransition] = useTransition();
 
   const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(initialTerminalHistory);
   const [terminalInput, setTerminalInput] = useState('');
+  const [vibe, setVibe] = useState('');
 
   const handleTerminalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -140,10 +170,20 @@ export function MainInterface() {
     const newHistory: TerminalLine[] = [...terminalHistory, { type: 'input', content: command }];
     setTerminalHistory(newHistory);
     setTerminalInput('');
-    
-    const formData = new FormData();
-    formData.append('vibe', command);
-    formAction(formData);
+
+    if (command.toLowerCase() === 'generate') {
+      if (!vibe) {
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Error: Please describe the component you want to build in the prompt area first.`}]);
+        return;
+      }
+      // Trigger the form submission
+      const formData = new FormData(formRef.current!);
+      formAction(formData);
+    } else if (command.toLowerCase() === 'clear') {
+        setTerminalHistory([]);
+    } else {
+        setTerminalHistory(prev => [...prev, {type: 'output', content: `Command not found: ${command}`}]);
+    }
   };
 
 
@@ -186,8 +226,19 @@ export function MainInterface() {
     }
   }, [terminalHistory]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault();
+        document.getElementById('vibe')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
-    <ResizablePanelGroup direction="horizontal" className="flex-1 border-t">
+    <ResizablePanelGroup direction="horizontal" className="flex-1 border-t-zinc-700/50 border-t">
       <style id="preview-styles">{`
         .preview-scope {
           ${initialState.designTokens.match(/:root\s*{([^}]+)}/)?.[1] || ''}
@@ -208,15 +259,23 @@ export function MainInterface() {
                       id="vibe"
                       name="vibe"
                       placeholder="e.g., A login form with a dark theme and a subtle glow effect on focus..."
-                      className="flex-1 text-base font-mono bg-background/50 border-input focus:border-primary/50 text-foreground/90 p-4 resize-none"
+                      className="flex-1 text-base bg-zinc-900/50 border-zinc-700 focus:border-primary/50 text-foreground/90 p-4 resize-none"
                       required
+                      value={vibe}
+                      onChange={(e) => setVibe(e.target.value)}
                     />
+                    <input type="hidden" name="model" value={model} />
                     <div className="flex items-center">
-                      <p className="text-xs text-muted-foreground">
-                        Press <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                          <span className="text-xs">⌘</span>J
-                        </kbd> to focus
-                      </p>
+                       <Select value={model} onValueChange={setModel}>
+                        <SelectTrigger className="w-[280px] h-9">
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="openrouter/sherlock-dash-alpha">Sherlock Dash Alpha</SelectItem>
+                          <SelectItem value="openrouter/sherlock-think-alpha">Sherlock Think Alpha</SelectItem>
+                          <SelectItem value="kwaipilot/kat-coder-pro:free">Kat Coder Pro (Free)</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <div className="ml-auto">
                         <SubmitButton />
                       </div>
@@ -227,16 +286,16 @@ export function MainInterface() {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={25} minSize={20}>
-            <div className="h-full flex flex-col">
-              <div className="p-2 border-b border-t flex items-center gap-2">
+            <div className="h-full flex flex-col bg-black">
+              <div className="p-2 border-b border-zinc-700 flex items-center gap-2">
                 <Terminal className="h-4 w-4" />
                 <h3 className="font-semibold text-sm">Terminal</h3>
               </div>
                <div ref={terminalRef} className="p-4 flex-1 bg-black text-white font-mono text-sm whitespace-pre-wrap overflow-y-auto">
                   {terminalHistory.map((line, index) => (
-                    <div key={index} className="flex gap-2">
-                        {line.type === 'input' && <span className="text-green-400 flex-shrink-0">&gt;</span>}
-                        <p className={line.type === 'output' ? 'text-gray-300' : ''}>{line.content}</p>
+                    <div key={index} className="flex gap-2 items-start">
+                        {line.type === 'input' && <span className="text-green-400 flex-shrink-0 mt-px">&gt;</span>}
+                        <p className={`flex-1 ${line.type === 'output' ? 'text-gray-300' : ''}`}>{line.content}</p>
                     </div>
                   ))}
                    <form onSubmit={handleTerminalSubmit} className="flex gap-2">
@@ -259,8 +318,8 @@ export function MainInterface() {
 
       <ResizablePanel defaultSize={60}>
         <Tabs defaultValue="preview" className="flex flex-col h-full w-full">
-            <div className="flex items-center p-2 border-b">
-                 <TabsList className="grid grid-cols-2 h-auto">
+            <div className="flex items-center p-2 border-b border-zinc-700">
+                 <TabsList className="grid grid-cols-2 h-auto bg-zinc-900">
                     <TabsTrigger value="preview">
                         <Eye className="mr-2 h-4 w-4" />
                         Preview
@@ -279,14 +338,14 @@ export function MainInterface() {
                 </TabsContent>
                 <TabsContent value="code" className="flex flex-col h-full m-0 p-0">
                   <Tabs defaultValue="tsx" className="flex flex-col h-full bg-transparent">
-                    <div className="flex items-center border-b bg-zinc-900">
+                    <div className="flex items-center border-b border-zinc-700 bg-zinc-900">
                       <TabsList className="bg-transparent border-b-0 rounded-none p-0 h-auto">
-                        <TabsTrigger value="tsx" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Component.tsx</TabsTrigger>
-                        <TabsTrigger value="tokens" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">tokens.css</TabsTrigger>
-                        <TabsTrigger value="diff" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent">Diff</TabsTrigger>
+                        <TabsTrigger value="tsx" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">Component.tsx</TabsTrigger>
+                        <TabsTrigger value="tokens" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">tokens.css</TabsTrigger>
+                        <TabsTrigger value="diff" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-foreground">Diff</TabsTrigger>
                       </TabsList>
                     </div>
-                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-0 relative">
+                    <TabsContent value="tsx" className="flex-1 flex flex-col mt-0 relative bg-black">
                       <Textarea
                         value={state.tsxCode}
                         readOnly
@@ -298,7 +357,7 @@ export function MainInterface() {
                         <DownloadButton textToDownload={state.tsxCode || ''} filename="VibeComponent.tsx" />
                       </div>
                     </TabsContent>
-                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-0 relative">
+                    <TabsContent value="tokens" className="flex-1 flex flex-col mt-0 relative bg-black">
                       <Textarea
                         value={state.designTokens}
                         readOnly
@@ -310,9 +369,9 @@ export function MainInterface() {
                           <DownloadButton textToDownload={state.designTokens || ''} filename="tokens.css" />
                         </div>
                     </TabsContent>
-                     <TabsContent value="diff" className="flex-1 flex flex-col mt-0 relative">
+                     <TabsContent value="diff" className="flex-1 flex flex-col mt-0 relative bg-black">
                         <div className="flex-1 flex items-center justify-center">
-                          <Card className="max-w-sm text-center">
+                          <Card className="max-w-sm text-center bg-transparent border-zinc-800">
                             <CardContent className="p-6">
                               <GitPullRequest className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
                               <h3 className="font-semibold">No changes yet</h3>

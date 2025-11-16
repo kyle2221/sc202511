@@ -8,6 +8,7 @@ import path from 'path';
 
 const VibeSchema = z.object({
   vibe: z.string().min(3, { message: 'Please describe the vibe in at least 3 characters.' }).max(400, { message: 'Description must be 400 characters or less.' }),
+  model: z.string(),
 });
 
 export type FormState = {
@@ -25,11 +26,14 @@ export async function generateCode(
 ): Promise<FormState> {
   const validatedFields = VibeSchema.safeParse({
     vibe: formData.get('vibe'),
+    model: formData.get('model'),
   });
 
   if (!validatedFields.success) {
+    const vibeError = validatedFields.error.flatten().fieldErrors.vibe?.[0];
+    const modelError = validatedFields.error.flatten().fieldErrors.model?.[0];
     return {
-      error: validatedFields.error.flatten().fieldErrors.vibe?.[0],
+      error: vibeError || modelError || 'Invalid input.',
     };
   }
 
@@ -37,6 +41,7 @@ export async function generateCode(
     
     const result = await generateCodeFromVibe({
       vibeDescription: validatedFields.data.vibe,
+      model: validatedFields.data.model as ModelId,
     });
 
     const componentPath = path.join(process.cwd(), 'src', 'app', 'components', 'vibe-component.tsx');

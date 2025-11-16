@@ -8,7 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import { ModelId } from 'genkit/ai';
 
 
@@ -18,6 +18,7 @@ const GenerateCodeFromVibeInputSchema = z.object({
     .describe(
       'A natural language description of the desired aesthetic vibe (e.g., \'retro cyberpunk\', \'minimalist workspace\').'
     ),
+  model: z.custom<ModelId>(),
 });
 export type GenerateCodeFromVibeInput = z.infer<typeof GenerateCodeFromVibeInputSchema>;
 
@@ -69,9 +70,14 @@ const generateCodeFromVibeFlow = ai.defineFlow(
     outputSchema: GenerateCodeFromVibeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(
-        { vibeDescription: input.vibeDescription }
+    const {output} = await ai.generate(
+      {
+        model: input.model,
+        prompt: prompt.prompt!,
+        input: { vibeDescription: input.vibeDescription },
+        output: { schema: prompt.output?.schema! },
+      }
     );
-    return output!;
+    return output;
   }
 );

@@ -230,7 +230,7 @@ export function MainInterface() {
                       id="app"
                       name="app"
                       placeholder="e.g., A login form with a dark theme and a subtle glow effect on focus..."
-                      className="flex-1 text-base bg-zinc-900/50 border-zinc-700 focus:border-primary/50 text-foreground/90 p-4 resize-none"
+                      className="flex-1 bg-zinc-900/50 border-zinc-700 focus:border-primary/50 text-foreground/90 p-4 resize-none"
                       required
                       value={app}
                       onChange={(e) => setApp(e.target.value)}
